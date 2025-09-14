@@ -177,13 +177,13 @@ export class LivestreamService {
   }
 
   // Check if user is currently live
-  static async isUserCurrentlyLive(): Promise<boolean> {
-    const currentLiveId = this.storage.get('current_live_id');
-    if (!currentLiveId) return false;
+  // static async isUserCurrentlyLive(): Promise<boolean> {
+  //   const currentLiveId = this.storage.get('current_live_id');
+  //   if (!currentLiveId) return false;
 
-    const result = await this.getLiveStreamDetails(currentLiveId);
-    return result.success;
-  }
+  //   const result = await this.getLiveStreamDetails(currentLiveId);
+  //   return result.success;
+  // }
 
   // Get current live session info
   static getCurrentLiveId(): string | null {
