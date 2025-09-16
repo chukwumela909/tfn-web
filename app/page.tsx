@@ -7,16 +7,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('auth_token');
-    
-    if (token) {
-      // User is authenticated, redirect to dashboard
-      router.push('/dashboard');
-    } else {
-      // User is not authenticated, redirect to auth page
-      router.push('/auth');
-    }
+    // Always redirect to dashboard first, let dashboard handle auth state
+    router.push('/dashboard');
   }, [router]);
 
   // Show a minimal loading state while redirecting

@@ -412,6 +412,27 @@ export default function AuthPage() {
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* Legal Links */}
+        <div className="text-center mt-8 pt-6 border-t border-slate-700">
+          <div className="flex justify-center space-x-6 text-sm">
+            <button
+              onClick={() => router.push('/privacy')}
+              className="text-slate-400 hover:text-slate-300 transition-colors"
+            >
+              Privacy Policy
+            </button>
+            <button
+              onClick={() => router.push('/terms')}
+              className="text-slate-400 hover:text-slate-300 transition-colors"
+            >
+              Terms & Conditions
+            </button>
+          </div>
+          <p className="text-slate-500 text-xs mt-2">
+            By using TFN Network, you agree to our Terms & Conditions and Privacy Policy.
+          </p>
+        </div>
       </motion.div>
     </div>
   );

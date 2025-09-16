@@ -82,16 +82,16 @@ export default function HomeComponent() {
 
 
   return (
-    <div className="px-4 lg:px-8">
+    <div className="px-4 lg:px-8 pt-5">
      <LiveStreamViewer  />
 
       {/* Aceternity Carousel Section */}
-      <section className="lg:mb-8">
-        <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6">Featured Content</h2>
-        <div className="relative overflow-hidden w-full">
-          <Carousel slides={slideData} />
-        </div>
-      </section>
+        {/* <section className="lg:mb-8">
+          <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6">Featured Content</h2>
+          <div className="relative overflow-hidden w-full">
+            <Carousel slides={slideData} />
+          </div>
+        </section> */}
     </div>
   );
 }

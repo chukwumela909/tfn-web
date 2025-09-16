@@ -16,20 +16,31 @@ import {
 // Import page components
 import HomeComponent from '@/components/dashboard/HomeComponent';
 import LiveTVComponent from '@/components/dashboard/LiveTVComponent';
-import GoLiveComponent from '@/components/dashboard/GoLiveComponent';
+// import GoLiveComponent from '@/components/dashboard/GoLiveComponent';
 import ProfileComponent from '@/components/dashboard/ProfileComponent';
 
 export default function DashboardLayout() {
   const [activeTab, setActiveTab] = useState('home');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
-  const navigationTabs = [
+  // Base navigation tabs available to all users
+  const baseNavigationTabs = [
     { id: 'home', icon: IconHome, label: 'Home', component: HomeComponent },
     { id: 'live-tv', icon: IconDeviceTv, label: 'Live TV', component: LiveTVComponent },
-    { id: 'go-live', icon: IconVideo, label: 'Go Live', component: GoLiveComponent },
+    // { id: 'go-live', icon: IconVideo, label: 'Go Live', component: GoLiveComponent },
+  ];
+
+  // Additional tabs for authenticated users only
+  const authenticatedTabs = [
     { id: 'profile', icon: IconUser, label: 'Profile', component: ProfileComponent },
   ];
+
+  // Dynamic navigation tabs based on authentication status
+  const navigationTabs = isAuthenticated 
+    ? [...baseNavigationTabs, ...authenticatedTabs]
+    : baseNavigationTabs;
 
   // Set active tab based on current path
   useEffect(() => {
@@ -41,22 +52,24 @@ export default function DashboardLayout() {
         pathname.includes(tab.id) || 
         (pathname === '/home' && tab.id === 'home') ||
         (pathname === '/live-tv' && tab.id === 'live-tv') ||
-        (pathname === '/go-live' && tab.id === 'go-live') ||
+        // (pathname === '/go-live' && tab.id === 'go-live') ||
         (pathname === '/profile' && tab.id === 'profile')
       );
       if (matchingTab) {
         setActiveTab(matchingTab.id);
+      } else if (pathname === '/profile' && !isAuthenticated) {
+        // If trying to access profile but not authenticated, redirect to home
+        setActiveTab('home');
+        window.history.pushState({}, '', '/dashboard');
       }
     }
-  }, [pathname]);
+  }, [pathname, navigationTabs, isAuthenticated]);
 
   // Check authentication
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
-    if (!token) {
-      router.push('/auth');
-    }
-  }, [router]);
+    setIsAuthenticated(!!token);
+  }, []);
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
@@ -113,16 +126,28 @@ export default function DashboardLayout() {
         </div>
 
         <div className="flex items-center space-x-2">
+          {!isAuthenticated && (
+            <button 
+              onClick={() => router.push('/auth')}
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-full text-sm font-medium transition-colors"
+            >
+              Sign In
+            </button>
+          )}
+          
           <button className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
             <IconSearch className="w-5 h-5 text-white" />
           </button>
-          <button
-            onClick={handleLogout}
-            className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-red-500/80 transition-colors"
-            title="Logout"
-          >
-            <IconLogout className="w-5 h-5 text-white" />
-          </button>
+          
+          {isAuthenticated && (
+            <button
+              onClick={handleLogout}
+              className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-red-500/80 transition-colors"
+              title="Logout"
+            >
+              <IconLogout className="w-5 h-5 text-white" />
+            </button>
+          )}
         </div>
       </header>
 
@@ -197,21 +222,49 @@ export default function DashboardLayout() {
 
             {/* Bottom Actions */}
             <div className="flex-shrink-0 space-y-3 pt-6 border-t border-slate-700 mt-6">
-              <button className="w-full flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-400 hover:text-white hover:bg-slate-700 transition-colors">
+              {!isAuthenticated && (
+                <button 
+                  onClick={() => router.push('/auth')}
+                  className="w-full flex items-center justify-center py-3 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+                >
+                  <span>Sign In</span>
+                </button>
+              )}
+              
+              {/* <button className="w-full flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-400 hover:text-white hover:bg-slate-700 transition-colors">
                 <IconPlus className="w-5 h-5 flex-shrink-0" />
                 <span className="font-medium">Create</span>
               </button>
               <button className="w-full flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-400 hover:text-white hover:bg-slate-700 transition-colors">
                 <IconSearch className="w-5 h-5 flex-shrink-0" />
                 <span className="font-medium">Search</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-              >
-                <IconLogout className="w-5 h-5 flex-shrink-0" />
-                <span className="font-medium">Logout</span>
-              </button>
+              </button> */}
+
+              {/* Legal Links */}
+              <div className="space-y-1">
+                <button 
+                  onClick={() => router.push('/privacy')}
+                  className="w-full text-left py-2 px-4 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  Privacy Policy
+                </button>
+                <button 
+                  onClick={() => router.push('/terms')}
+                  className="w-full text-left py-2 px-4 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  Terms & Conditions
+                </button>
+              </div>
+              
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center space-x-3 py-3 px-4 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                >
+                  <IconLogout className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium">Logout</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
