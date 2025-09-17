@@ -57,7 +57,7 @@ const LiveStreamViewer = () => {
                 ref={videoRef}
                 autoPlay
                 playsInline
-                muted
+                
                 style={{
                     position: 'absolute',
                     top: 0,
