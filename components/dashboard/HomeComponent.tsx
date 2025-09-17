@@ -2,14 +2,19 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Carousel from '@/components/ui/carousel';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 import {
   IconPlayerPlay,
   IconPlayerPause,
   IconVolumeOff,
   IconVolume,
 } from '@tabler/icons-react';
-import { ZegoExpressEngine } from 'zego-express-engine-webrtc';
 import { useRef } from 'react';
 import dynamic from 'next/dynamic';
 // Sample slider images converted to carousel format
@@ -85,13 +90,47 @@ export default function HomeComponent() {
     <div className="px-4 lg:px-8 pt-5">
      <LiveStreamViewer  />
 
-      {/* Aceternity Carousel Section */}
-        {/* <section className="lg:mb-8">
+      {/* Featured Content Carousel */}
+        <section className="lg:mb-8 ">
           <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6">Featured Content</h2>
           <div className="relative overflow-hidden w-full">
-            <Carousel slides={slideData} />
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent>
+                {slideData.map((slide, index) => (
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 ">
+                    <div className="p-1">
+                      <div className="relative h-64 md:h-72 lg:h-80 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-slate-700">
+                        <Image
+                          src={slide.src}
+                          alt={slide.title}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                        <div className="absolute inset-0 bg-black/30" />
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <h3 className="text-white font-semibold text-lg mb-2">{slide.title}</h3>
+                          {/* <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                            <span className="text-white text-sm">Live</span>
+                          </div> */}
+                        </div>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
+            </Carousel>
           </div>
-        </section> */}
+        </section>
     </div>
   );
 }
