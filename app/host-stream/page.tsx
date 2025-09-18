@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import dynamic from 'next/dynamic';
 import { ApiService } from '@/lib/api-service';
 
-const LiveStreamViewer = dynamic(
-  () => import('@/components/dashboard/StreamPlay'),
-  { ssr: false, loading: () => <div className="h-64 grid place-items-center text-slate-300">Loading player…</div> }
-);
+  const LiveStreamViewer = dynamic(() => import('../../components/dashboard/StreamPlay'), {
+  ssr: false, // Disable server-side rendering for this component
+  loading: () => <p>Loading stream...</p>
+});
 
 type HostData = {
   message?: string;
