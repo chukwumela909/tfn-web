@@ -3,8 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import LiveStreamViewer from '@/components/dashboard/StreamPlay';
+import dynamic from 'next/dynamic';
 import { ApiService } from '@/lib/api-service';
+
+const LiveStreamViewer = dynamic(
+  () => import('@/components/dashboard/StreamPlay'),
+  { ssr: false, loading: () => <div className="h-64 grid place-items-center text-slate-300">Loading player…</div> }
+);
 
 type HostData = {
   message?: string;
