@@ -139,10 +139,8 @@ export default function ProfileComponent() {
       if (liveId) {
         try { localStorage.setItem('current_live_id', String(liveId)); } catch {}
       }
-      // Persist full response for host-stream page
-      try { localStorage.setItem('host_stream_data', JSON.stringify(res)); } catch {}
       setShowAuthModal(false);
-      router.push('/host-stream');
+      router.push('/go-live');
     } catch (e) {
       console.error('Failed to create livestream', e);
       setAuthError('Could not start livestream. Please try again.');

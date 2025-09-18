@@ -78,6 +78,7 @@ const slideData = [
 ];
 
 export default function HomeComponent() {
+  const [selectedImage, setSelectedImage] = useState<{ title: string; src: string } | null>(null);
 
   const LiveStreamViewer = dynamic(() => import('../dashboard/StreamPlay'), {
   ssr: false, // Disable server-side rendering for this component
@@ -91,7 +92,7 @@ export default function HomeComponent() {
      <LiveStreamViewer  />
 
       {/* Featured Content Carousel */}
-        <section className="lg:mb-8 ">
+        <section className="lg:mb-8 mt-7">
           <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6">Featured Content</h2>
           <div className="relative overflow-hidden w-full">
             <Carousel
@@ -105,7 +106,10 @@ export default function HomeComponent() {
                 {slideData.map((slide, index) => (
                   <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 ">
                     <div className="p-1">
-                      <div className="relative h-64 md:h-72 lg:h-80 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-slate-700">
+                      <div 
+                        className="relative h-64 md:h-72 lg:h-80 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-slate-700 cursor-pointer hover:scale-105 transition-transform duration-200"
+                        onClick={() => setSelectedImage(slide)}
+                      >
                         <Image
                           src={slide.src}
                           alt={slide.title}
@@ -131,6 +135,32 @@ export default function HomeComponent() {
             </Carousel>
           </div>
         </section>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="relative max-w-4xl max-h-[90vh] w-full mx-4">
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 text-xl font-bold z-10"
+            >
+              ✕ Close
+            </button>
+            <div className="relative w-full h-[80vh] bg-slate-900 rounded-xl overflow-hidden">
+              <Image
+                src={selectedImage.src}
+                alt={selectedImage.title}
+                fill
+                className="object-fill  "
+                sizes="90vw"
+              />
+            </div>
+            <div className="mt-4 text-center">
+              <h3 className="text-white text-xl font-semibold">{selectedImage.title}</h3>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

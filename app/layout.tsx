@@ -21,7 +21,7 @@ const lato = Lato({
 
 export const metadata: Metadata = {
   title: "This Fellowship Network",
-  description: "A platform for livestreaming and community engagement",
+  description: "A platform for livestreaming and gospel engagement",
 };
 
 export default function RootLayout({

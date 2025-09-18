@@ -113,16 +113,16 @@ export default function DashboardLayout() {
             <Image
               src="/TFN-new.png"
               alt="TFN Logo"
-              width={40}
+              width={55}
               height={40}
               className="rounded-full"
             />
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900"></div>
+            {/* <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900"></div> */}
           </div>
           
-          <button className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+          {/* <button className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
             <IconPlus className="w-5 h-5 text-white" />
-          </button>
+          </button> */}
         </div>
 
         <div className="flex items-center space-x-2">
@@ -188,8 +188,8 @@ export default function DashboardLayout() {
               <Image
                 src="/TFN-new.png"
                 alt="TFN Logo"
-                width={50}
-                height={50}
+                width={70}
+                height={70}
                 className="rounded-full"
               />
               <div className="relative">

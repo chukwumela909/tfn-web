@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import LiveStreamViewer from '@/components/dashboard/StreamPlay';
 
 type HostData = {
   message?: string;
@@ -69,6 +70,15 @@ export default function HostStreamPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Live Stream Monitor */}
+            <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4">Live Stream Monitor</h2>
+              <p className="text-slate-300 text-sm mb-4">
+                This will show your stream once it starts broadcasting from OBS. It may take a few moments to appear.
+              </p>
+              <LiveStreamViewer />
+            </div>
+
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-2">Livestream Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300">
