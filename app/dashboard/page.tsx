@@ -42,28 +42,18 @@ export default function DashboardLayout() {
     ? [...baseNavigationTabs, ...authenticatedTabs]
     : baseNavigationTabs;
 
-  // Set active tab based on current path
+  // Set active tab based on current path - only respond to /dashboard
   useEffect(() => {
-    const path = pathname.split('/')[1] || 'home';
-    if (path === 'dashboard') {
-      setActiveTab('home');
-    } else {
-      const matchingTab = navigationTabs.find(tab => 
-        pathname.includes(tab.id) || 
-        (pathname === '/home' && tab.id === 'home') ||
-        (pathname === '/live-tv' && tab.id === 'live-tv') ||
-        // (pathname === '/go-live' && tab.id === 'go-live') ||
-        (pathname === '/profile' && tab.id === 'profile')
-      );
-      if (matchingTab) {
-        setActiveTab(matchingTab.id);
-      } else if (pathname === '/profile' && !isAuthenticated) {
-        // If trying to access profile but not authenticated, redirect to home
-        setActiveTab('home');
-        window.history.pushState({}, '', '/dashboard');
-      }
+    // Always stay on dashboard route and default to home tab
+    if (pathname !== '/dashboard') {
+      window.history.replaceState({}, '', '/dashboard');
     }
-  }, [pathname, navigationTabs, isAuthenticated]);
+    
+    // If not authenticated and trying to access profile, reset to home
+    if (activeTab === 'profile' && !isAuthenticated) {
+      setActiveTab('home');
+    }
+  }, [pathname, isAuthenticated, activeTab]);
 
   // Check authentication
   useEffect(() => {
@@ -73,9 +63,8 @@ export default function DashboardLayout() {
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
-    // Update URL without full page reload
-    const newPath = tabId === 'home' ? '/dashboard' : `/${tabId}`;
-    window.history.pushState({}, '', newPath);
+    // Keep URL as /dashboard - don't change the path
+    // This prevents 404s on refresh
   };
 
   const handleLogout = () => {
@@ -113,7 +102,7 @@ export default function DashboardLayout() {
             <Image
               src="/TFN-new.png"
               alt="TFN Logo"
-              width={55}
+              width={40}
               height={40}
               className="rounded-full"
             />

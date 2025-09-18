@@ -67,12 +67,12 @@ export class ApiService {
     return response.json();
   }
 
-//   static async getLiveStreamDetails(liveId: string) {
-//     const response = await fetch(`${this.baseUrl}/livestream/${liveId}`, {
-//       headers: { 'Content-Type': 'application/json' },
-//     });
-//     return response.json();
-//   }
+  static async getLiveStreamDetails(liveId: string) {
+    const response = await fetch(`${this.baseUrl}/livestream/${liveId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.json();
+  }
 
   static async joinLivestream(liveId: string, userId: string) {
     const response = await fetch(`${this.baseUrl}/livestream/${liveId}/join`, {

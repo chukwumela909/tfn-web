@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import LiveStreamViewer from '@/components/dashboard/StreamPlay';
+import { ApiService } from '@/lib/api-service';
 
 type HostData = {
   message?: string;
@@ -20,15 +21,21 @@ type HostData = {
 export default function HostStreamPage() {
   const router = useRouter();
   const [data, setData] = useState<HostData | null>(null);
+  const [isEnding, setIsEnding] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem('host_stream_data');
+      console.log('Raw localStorage data:', raw); // Debug log
       if (raw) {
-        setData(JSON.parse(raw));
+        const parsedData = JSON.parse(raw);
+        console.log('Parsed data:', parsedData); // Debug log
+        setData(parsedData);
+      } else {
+        console.log('No host_stream_data found in localStorage'); // Debug log
       }
     } catch (e) {
-      // ignore
+      console.error('Error parsing host_stream_data:', e);
     }
   }, []);
 
@@ -43,28 +50,88 @@ export default function HostStreamPage() {
     }
   };
 
+  const endLivestream = async () => {
+    const user_data = localStorage.getItem('user_data');
+    const user_id = user_data ? JSON.parse(user_data).userId : null;
+
+    if (!data?.liveId) {
+      alert('No live stream to end');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to end this livestream? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsEnding(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        alert('No authentication token found');
+        return;
+      }
+
+      // const userData = await ApiService.getUserData(token);
+      // if (!userData.success || !userData.user?.id) {
+      //   alert('Failed to get user data');
+      //   return;
+      // }
+
+      const result = await ApiService.endLiveStream(data.liveId, user_id);
+
+
+      
+      if (result.message === 'Livestream ended successfully') {
+        alert('Livestream ended successfully');
+        localStorage.removeItem('host_stream_data');
+        router.push('/dashboard');
+      } else {
+        alert(result.message || 'Failed to end livestream');
+      }
+    } catch (error) {
+      console.error('Error ending livestream:', error);
+      alert('An error occurred while ending the livestream');
+    } finally {
+      setIsEnding(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-white p-4 pb-20 lg:pb-4">
       <div className="max-w-3xl mx-auto lg:ml-64">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Host Stream</h1>
-          <Button
-            onClick={() => router.back()}
-            className="bg-slate-700 hover:bg-slate-600 text-white border-0"
-          >
-            ← Back
-          </Button>
+          <div className="flex gap-3">
+            {data?.liveId && (
+              <Button
+                onClick={endLivestream}
+                disabled={isEnding}
+                className="bg-red-600 hover:bg-red-700 text-white border-0"
+              >
+                {isEnding ? 'Ending...' : 'End Livestream'}
+              </Button>
+            )}
+            <Button
+              onClick={() => router.back()}
+              className="bg-slate-700 hover:bg-slate-600 text-white border-0"
+            >
+              ← Back
+            </Button>
+          </div>
         </div>
 
         {!data ? (
           <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">
             <p className="text-slate-300">No livestream data found. Please start a new livestream.</p>
+            <div className="mt-2 text-xs text-slate-400">
+              Debug: Check browser console for localStorage data
+            </div>
             <div className="mt-4 flex gap-3">
               <Button
-                onClick={() => router.push('/profile')}
+                onClick={() => router.push('/dashboard')}
                 className="bg-slate-700 hover:bg-slate-600 text-white"
               >
-                Go to Profile
+                Go to Dashboard
               </Button>
             </div>
           </div>
@@ -72,7 +139,16 @@ export default function HostStreamPage() {
           <div className="space-y-6">
             {/* Live Stream Monitor */}
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-4">Live Stream Monitor</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Live Stream Monitor</h2>
+                <Button
+                  onClick={endLivestream}
+                  disabled={isEnding}
+                  className="bg-red-600 hover:bg-red-700 text-white border-0"
+                >
+                  {isEnding ? 'Ending...' : 'End Livestream'}
+                </Button>
+              </div>
               <p className="text-slate-300 text-sm mb-4">
                 This will show your stream once it starts broadcasting from OBS. It may take a few moments to appear.
               </p>

@@ -17,9 +17,9 @@ export default function LiveTVPage() {
   const [activeTab, setActiveTab] = useState('live-tv');
 
   const navigationTabs = [
-    { id: 'home', icon: IconHome, label: 'Home', href: '/home' },
+    { id: 'home', icon: IconHome, label: 'Home', href: '/dashboard' },
     { id: 'live-tv', icon: IconDeviceTv, label: 'Live TV', href: '/live-tv' },
-    { id: 'profile', icon: IconUser, label: 'Profile', href: '/profile' },
+    { id: 'profile', icon: IconUser, label: 'Profile', href: '/dashboard' },
   ];
 
   const handleTabClick = (tabId: string, href?: string) => {

@@ -135,12 +135,20 @@ export default function ProfileComponent() {
       setIsStartingLive(true);
       setAuthError('');
       const res = await ApiService.createLiveStream({ userId: userData.userId, streamType: 'rtmp' });
+      
+      // Save the complete response to localStorage for the host-stream page
+      try { 
+        localStorage.setItem('host_stream_data', JSON.stringify(res)); 
+      } catch (e) {
+        console.error('Failed to save host stream data:', e);
+      }
+      
       const liveId = res?.liveId || res?.id || res?.data?.liveId || res?.data?.id || res?.livestreamId || res?.livestream?.id;
       if (liveId) {
         try { localStorage.setItem('current_live_id', String(liveId)); } catch {}
       }
       setShowAuthModal(false);
-      router.push('/go-live');
+      router.push('/host-stream');
     } catch (e) {
       console.error('Failed to create livestream', e);
       setAuthError('Could not start livestream. Please try again.');
