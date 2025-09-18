@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import LiveStreamsList from '@/components/live/LiveStreamsList';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -8,9 +8,9 @@ import Image from 'next/image';
 import {
   IconHome,
   IconDeviceTv,
-  IconVideo,
   IconUser,
 } from '@tabler/icons-react';
+import { ApiService } from '@/lib/api-service';
 
 export default function LiveTVPage() {
   const router = useRouter();
@@ -19,7 +19,6 @@ export default function LiveTVPage() {
   const navigationTabs = [
     { id: 'home', icon: IconHome, label: 'Home', href: '/home' },
     { id: 'live-tv', icon: IconDeviceTv, label: 'Live TV', href: '/live-tv' },
-    { id: 'go-live', icon: IconVideo, label: 'Go Live', href: '/go-live' },
     { id: 'profile', icon: IconUser, label: 'Profile', href: '/profile' },
   ];
 
@@ -27,6 +26,51 @@ export default function LiveTVPage() {
     setActiveTab(tabId);
     if (href && href !== '/live-tv') {
       router.push(href);
+    }
+  };
+
+  // Auth modal state for starting livestream from this tab
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authCode, setAuthCode] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isStartingLive, setIsStartingLive] = useState(false);
+
+  const handleStartLivestream = () => {
+    setAuthCode('');
+    setAuthError('');
+    setShowAuthModal(true);
+  };
+
+  const confirmStartLivestream = async () => {
+    if (authCode.trim() !== 'admin123') {
+      setAuthError('Invalid code. Please try again.');
+      return;
+    }
+    try {
+      setIsStartingLive(true);
+      setAuthError('');
+      // Retrieve user id from local storage profile data
+      const storedUserData = typeof window !== 'undefined' ? localStorage.getItem('user_data') : null;
+      const parsed = storedUserData ? JSON.parse(storedUserData) : null;
+      const userId = parsed?.userId || localStorage.getItem('auth_token');
+      if (!userId) {
+        setAuthError('Please login again.');
+        setIsStartingLive(false);
+        return;
+      }
+      const res = await ApiService.createLiveStream({ userId, streamType: 'rtmp' });
+      const liveId = res?.liveId || res?.id || res?.data?.liveId || res?.data?.id || res?.livestreamId || res?.livestream?.id;
+      if (liveId) {
+        try { localStorage.setItem('current_live_id', String(liveId)); } catch {}
+      }
+      try { localStorage.setItem('host_stream_data', JSON.stringify(res)); } catch {}
+      setShowAuthModal(false);
+      router.push('/host-stream');
+    } catch (e) {
+      console.error('Failed to create livestream', e);
+      setAuthError('Could not start livestream. Please try again.');
+    } finally {
+      setIsStartingLive(false);
     }
   };
 
@@ -44,13 +88,7 @@ export default function LiveTVPage() {
           </Button>
           <h1 className="text-xl font-semibold">Live TV</h1>
         </div>
-
-        <Button
-          onClick={() => router.push('/go-live')}
-          size="sm"
-        >
-          Go Live
-        </Button>
+        <Button onClick={handleStartLivestream} size="sm">Start Livestream</Button>
       </header>
 
       {/* Main Content */}
@@ -119,7 +157,28 @@ export default function LiveTVPage() {
         </div>
       </nav>
 
-      {/* Desktop Sidebar would go here if needed */}
+      {/* Authorization Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowAuthModal(false)} />
+          <div className="relative z-[101] w-[90%] max-w-md rounded-2xl bg-slate-800 border border-slate-700 p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold mb-2">Authorization Required</h3>
+            <p className="text-sm text-slate-300 mb-4">Enter the admin code to start a livestream.</p>
+            <input
+              type="password"
+              value={authCode}
+              onChange={(e) => setAuthCode(e.target.value)}
+              placeholder="Enter code"
+              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 outline-none focus:border-blue-500"
+            />
+            {authError && <p className="text-red-400 text-sm mt-2">{authError}</p>}
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <Button variant="outline" disabled={isStartingLive} onClick={() => setShowAuthModal(false)}>Cancel</Button>
+              <Button disabled={isStartingLive} onClick={confirmStartLivestream}>{isStartingLive ? 'Starting…' : 'Start Livestream'}</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

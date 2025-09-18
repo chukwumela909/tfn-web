@@ -24,7 +24,6 @@ export default function GoLivePage() {
   const navigationTabs = [
     { id: 'home', icon: IconHome, label: 'Home', href: '/home' },
     { id: 'live-tv', icon: IconDeviceTv, label: 'Live TV', href: '/live-tv' },
-    { id: 'go-live', icon: IconVideo, label: 'Go Live', href: '/go-live' },
     { id: 'profile', icon: IconUser, label: 'Profile', href: '/profile' },
   ];
 

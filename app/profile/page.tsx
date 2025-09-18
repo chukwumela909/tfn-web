@@ -29,12 +29,15 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authCode, setAuthCode] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isStartingLive, setIsStartingLive] = useState(false);
   const router = useRouter();
 
   const navigationTabs = [
-    { id: 'home', icon: IconHome, label: 'Home', href: '/home' },
+    { id: 'home', icon: IconHome, label: 'Home', href: '/dashboard' },
     { id: 'live-tv', icon: IconDeviceTv, label: 'Live TV', href: '/live-tv' },
-    { id: 'go-live', icon: IconVideo, label: 'Go Live', href: '/go-live' },
     { id: 'profile', icon: IconUser, label: 'Profile', href: '/profile' },
   ];
 
@@ -126,7 +129,42 @@ export default function ProfilePage() {
   };
 
   const handleStartLivestream = () => {
-    router.push('/go-live');
+    setAuthCode('');
+    setAuthError('');
+    setShowAuthModal(true);
+  };
+
+  const confirmStartLivestream = async () => {
+    if (authCode.trim() !== 'admin123') {
+      setAuthError('Invalid code. Please try again.');
+      return;
+    }
+
+    if (!userData?.userId) {
+      setAuthError('Missing user information. Please re-login.');
+      return;
+    }
+
+    try {
+      setIsStartingLive(true);
+      setAuthError('');
+  const res = await ApiService.createLiveStream({ userId: userData.userId, streamType: 'rtmp' });
+
+      // Try to capture a live stream id from common shapes
+      const liveId = res?.liveId || res?.id || res?.data?.liveId || res?.data?.id || res?.livestreamId || res?.livestream?.id;
+      if (liveId) {
+        try { localStorage.setItem('current_live_id', String(liveId)); } catch {}
+      }
+
+  try { localStorage.setItem('host_stream_data', JSON.stringify(res)); } catch {}
+  setShowAuthModal(false);
+  router.push('/host-stream');
+    } catch (e) {
+      console.error('Failed to create livestream', e);
+      setAuthError('Could not start livestream. Please try again.');
+    } finally {
+      setIsStartingLive(false);
+    }
   };
 
   const handleWallet = () => {
@@ -254,7 +292,7 @@ export default function ProfilePage() {
                 <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                   <IconVideo className="w-6 h-6 text-blue-400" />
                 </div>
-                <span className="text-lg font-medium">Start Livestream</span>
+                <span className="text-lg font-medium">Start </span>
               </div>
               <IconChevronRight className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors" />
             </button>
@@ -350,6 +388,73 @@ export default function ProfilePage() {
           })}
         </div>
       </nav>
+
+      {/* Authorization Modal for starting livestream */}
+      <AuthModal
+        open={showAuthModal}
+        code={authCode}
+        error={authError}
+        loading={isStartingLive}
+        onChange={setAuthCode}
+        onCancel={() => setShowAuthModal(false)}
+        onConfirm={confirmStartLivestream}
+      />
+    </div>
+  );
+}
+
+// Authorization Modal
+function AuthModal({
+  open,
+  code,
+  error,
+  loading,
+  onChange,
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean;
+  code: string;
+  error: string;
+  loading: boolean;
+  onChange: (v: string) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60" onClick={onCancel} />
+      <div className="relative z-[101] w-[90%] max-w-md rounded-2xl bg-slate-800 border border-slate-700 p-6 shadow-2xl">
+        <h3 className="text-lg font-semibold mb-2">Authorization Required</h3>
+        <p className="text-sm text-slate-300 mb-4">Enter the admin code to start a livestream.</p>
+
+        <input
+          type="password"
+          value={code}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Enter code"
+          className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 outline-none focus:border-blue-500"
+        />
+        {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+
+        <div className="mt-5 flex items-center justify-end gap-3">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="px-4 py-2 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-700/50 disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-60"
+          >
+            {loading ? 'Starting…' : 'Start Livestream'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
