@@ -107,7 +107,7 @@ export default function HomeComponent() {
                   <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 ">
                     <div className="p-1">
                       <div 
-                        className="relative h-96 md:h-96 lg:h-96 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-slate-700 cursor-pointer hover:scale-105 transition-transform duration-200"
+                        className="relative h-[500px] md:h-[600px] lg:h-[700px] bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-slate-700 cursor-pointer hover:scale-105 transition-transform duration-200"
                         onClick={() => setSelectedImage(slide)}
                       >
                         <Image
