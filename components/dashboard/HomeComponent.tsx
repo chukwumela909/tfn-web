@@ -107,7 +107,7 @@ export default function HomeComponent() {
                   <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 ">
                     <div className="p-1">
                       <div 
-                        className="relative h-64 md:h-72 lg:h-80 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-slate-700 cursor-pointer hover:scale-105 transition-transform duration-200"
+                        className="relative h-64 md:h-72 lg:h-96 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-slate-700 cursor-pointer hover:scale-105 transition-transform duration-200"
                         onClick={() => setSelectedImage(slide)}
                       >
                         <Image
@@ -119,7 +119,7 @@ export default function HomeComponent() {
                         />
                         <div className="absolute inset-0 bg-black/30" />
                         <div className="absolute bottom-4 left-4 right-4">
-                          <h3 className="text-white font-semibold text-lg mb-2">{slide.title}</h3>
+                          {/* <h3 className="text-white font-semibold text-lg mb-2">{slide.title}</h3> */}
                           {/* <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                             <span className="text-white text-sm">Live</span>
