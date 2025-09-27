@@ -74,20 +74,20 @@ export class ApiService {
     return response.json();
   }
 
-  static async joinLivestream(liveId: string, userId: string) {
+  static async joinLivestream(liveId: string, viewerId: string) {
     const response = await fetch(`${this.baseUrl}/livestream/${liveId}/join`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ viewerId }),
     });
     return response.json();
   }
 
-  static async leaveLivestream(liveId: string, userId: string) {
+  static async leaveLivestream(liveId: string, viewerId: string) {
     const response = await fetch(`${this.baseUrl}/livestream/${liveId}/leave`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ viewerId }),
     });
     return response.json();
   }

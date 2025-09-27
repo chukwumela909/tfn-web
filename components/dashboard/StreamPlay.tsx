@@ -235,7 +235,7 @@ const LiveStreamViewer = ({
         const video = videoRef.current;
         if (!video) return;
         // Re-attach to ensure video element gets the newest stream reference
-        try { (video as HTMLVideoElement).srcObject = null; } catch {}
+        try { (video as HTMLVideoElement).srcObject = null; } catch { }
         video.srcObject = media;
         // Ensure attributes for widest autoplay compatibility
         video.setAttribute('playsinline', 'true');
@@ -262,6 +262,9 @@ const LiveStreamViewer = ({
         const RETRY_DELAY_MS = 1500;
         try {
             const remoteStream = await zg.startPlayingStream(streamID);
+
+         
+
 
             if (!remoteStream) throw new Error('No MediaStream returned');
 
@@ -320,7 +323,7 @@ const LiveStreamViewer = ({
                 if (streamList.some((stream) => stream.streamID === currentStreamIdRef.current)) {
                     try {
                         await playStreamWithRetry(zg, currentStreamIdRef.current);
-                    } catch {}
+                    } catch { }
                 }
             }
         };
@@ -352,10 +355,10 @@ const LiveStreamViewer = ({
             if (zg) {
                 const sid = currentStreamIdRef.current;
                 if (sid) {
-                    try { zg.stopPlayingStream(sid); } catch {}
+                    try { zg.stopPlayingStream(sid); } catch { }
                 }
-                try { zg.logoutRoom && zg.logoutRoom('rtc01'); } catch {}
-                try { zg.destroyEngine && zg.destroyEngine(); } catch {}
+                try { zg.logoutRoom && zg.logoutRoom('rtc01'); } catch { }
+                try { zg.destroyEngine && zg.destroyEngine(); } catch { }
                 engineRef.current = null;
             }
         };
@@ -392,166 +395,166 @@ const LiveStreamViewer = ({
         if (isFullscreen) exitFullscreen();
         else enterFullscreen();
     };
-    
+
     return (
         <div style={{ width: '100%', margin: '0 auto' }}>
             <div
-            ref={containerRef}
-            style={{
-                position: 'relative',
-                width: '100%',
-                background: '#000',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                boxShadow: '0 4px 18px rgba(0,0,0,0.25)'
-            }}
-            >
-            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' /* 16:9 */ }}>
-                <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                
+                ref={containerRef}
                 style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
+                    position: 'relative',
                     width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    background: '#000'
-                }}
-                />
-            </div>
-
-            <div
-                style={{
-                position: 'absolute',
-                top: '12px',
-                left: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                zIndex: 2
-                }}
-            >
-                <span
-                style={{
-                    background: 'rgba(220,0,0,0.9)',
-                    color: '#fff',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    letterSpacing: '0.5px',
-                    fontFamily: 'system-ui, sans-serif',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
-                    userSelect: 'none'
-                }}
-                >
-                <span
-                    style={{
-                    display: 'inline-block',
-                    width: '8px',
-                    height: '8px',
-                    background: '#fff',
-                    borderRadius: '50%',
-                    animation: 'pulse 1.4s infinite'
-                    }}
-                />
-                LIVE
-                </span>
-                <span
-                style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    background: 'rgba(15,23,42,0.85)',
-                    color: '#fff',
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
-                    letterSpacing: '0.4px'
-                }}
-                >
-                <IconEye size={16} stroke={1.6} />
-                {Math.max(0, viewCount).toLocaleString()}
-                </span>
-            </div>
-
-            {!resolvedLiveId && (
-                <div
-                style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'rgba(15,23,42,0.75)',
-                    color: '#fff',
-                    padding: '12px 18px',
+                    background: '#000',
                     borderRadius: '12px',
-                    fontSize: '14px',
-                    textAlign: 'center',
-                    maxWidth: '260px',
-                    lineHeight: 1.4,
-                    zIndex: 1
-                }}
-                >
-                No active livestream detected yet.
-                </div>
-            )}
-
-            {joinError && resolvedLiveId && (
-                <div
-                style={{
-                    position: 'absolute',
-                    bottom: '16px',
-                    left: '16px',
-                    background: 'rgba(15,23,42,0.75)',
-                    color: '#fff',
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    lineHeight: 1.4,
-                    maxWidth: '260px',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.25)'
-                }}
-                >
-                {joinError}
-                </div>
-            )}
-
-            {/* Fullscreen toggle button */}
-            <button
-                onClick={toggleFullscreen}
-                title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                style={{
-                    position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '8px',
-                    background: 'rgba(0,0,0,0.55)',
-                    color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                    cursor: 'pointer'
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 18px rgba(0,0,0,0.25)'
                 }}
             >
-                {isFullscreen ? <IconMinimize size={18} /> : <IconMaximize size={18} />}
-            </button>
+                <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' /* 16:9 */ }}>
+                    <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
 
-            <style jsx>{`
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            background: '#000'
+                        }}
+                    />
+                </div>
+
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: '12px',
+                        left: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        zIndex: 2
+                    }}
+                >
+                    <span
+                        style={{
+                            background: 'rgba(220,0,0,0.9)',
+                            color: '#fff',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            letterSpacing: '0.5px',
+                            fontFamily: 'system-ui, sans-serif',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                            userSelect: 'none'
+                        }}
+                    >
+                        <span
+                            style={{
+                                display: 'inline-block',
+                                width: '8px',
+                                height: '8px',
+                                background: '#fff',
+                                borderRadius: '50%',
+                                animation: 'pulse 1.4s infinite'
+                            }}
+                        />
+                        LIVE
+                    </span>
+                    <span
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: 'rgba(15,23,42,0.85)',
+                            color: '#fff',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                            letterSpacing: '0.4px'
+                        }}
+                    >
+                        <IconEye size={16} stroke={1.6} />
+                        {Math.max(0, viewCount).toLocaleString()}
+                    </span>
+                </div>
+
+                {!resolvedLiveId && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            background: 'rgba(15,23,42,0.75)',
+                            color: '#fff',
+                            padding: '12px 18px',
+                            borderRadius: '12px',
+                            fontSize: '14px',
+                            textAlign: 'center',
+                            maxWidth: '260px',
+                            lineHeight: 1.4,
+                            zIndex: 1
+                        }}
+                    >
+                        No active livestream detected yet.
+                    </div>
+                )}
+
+                {joinError && resolvedLiveId && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            bottom: '16px',
+                            left: '16px',
+                            background: 'rgba(15,23,42,0.75)',
+                            color: '#fff',
+                            padding: '10px 14px',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                            lineHeight: 1.4,
+                            maxWidth: '260px',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.25)'
+                        }}
+                    >
+                        {joinError}
+                    </div>
+                )}
+
+                {/* Fullscreen toggle button */}
+                <button
+                    onClick={toggleFullscreen}
+                    title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                    aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                    style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '8px',
+                        background: 'rgba(0,0,0,0.55)',
+                        color: '#fff',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                        cursor: 'pointer'
+                    }}
+                >
+                    {isFullscreen ? <IconMinimize size={18} /> : <IconMaximize size={18} />}
+                </button>
+
+                <style jsx>{`
                 @keyframes pulse {
                 0% { transform: scale(.85); opacity: .6; }
                 50% { transform: scale(1); opacity: 1; }

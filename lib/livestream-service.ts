@@ -222,10 +222,10 @@ export class LivestreamService {
   // Join a livestream
   static async joinLivestream(liveId: string): Promise<StreamResponse> {
     try {
-      const userId = this.storage.get('auth_token') ||
-                     `user_${Date.now()}`;
+      const viewerId = this.storage.get('auth_token') ||
+                       `viewer_${Date.now()}`;
 
-      const response = await ApiService.joinLivestream(liveId, userId);
+      const response = await ApiService.joinLivestream(liveId, viewerId);
 
       return {
         success: true,
@@ -244,10 +244,10 @@ export class LivestreamService {
   // Leave a livestream
   static async leaveLivestream(liveId: string): Promise<StreamResponse> {
     try {
-      const userId = this.storage.get('auth_token') ||
-                     `user_${Date.now()}`;
+      const viewerId = this.storage.get('auth_token') ||
+                       `viewer_${Date.now()}`;
 
-      const response = await ApiService.leaveLivestream(liveId, userId);
+      const response = await ApiService.leaveLivestream(liveId, viewerId);
 
       return {
         success: true,
