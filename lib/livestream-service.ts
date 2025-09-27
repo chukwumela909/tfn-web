@@ -230,7 +230,7 @@ export class LivestreamService {
       return {
         success: true,
         data: response,
-        viewCount: response.viewCount || 0,
+        viewCount: response.currentViewCount ?? response.viewCount ?? response.livestream?.viewCount ?? 0,
         message: response.message || 'Successfully joined livestream',
       };
     } catch (error) {
@@ -252,7 +252,7 @@ export class LivestreamService {
       return {
         success: true,
         data: response,
-        viewCount: response.viewCount || 0,
+        viewCount: response.currentViewCount ?? response.viewCount ?? response.livestream?.viewCount ?? 0,
         message: response.message || 'Successfully left livestream',
       };
     } catch (error) {

@@ -157,7 +157,7 @@ export default function HostStreamPage() {
               <p className="text-slate-300 text-sm mb-4">
                 This will show your stream once it starts broadcasting from OBS. It may take a few moments to appear.
               </p>
-              <LiveStreamViewer />
+              <LiveStreamViewer liveId={data?.liveId} autoResolveLiveId={false} />
             </div>
 
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">

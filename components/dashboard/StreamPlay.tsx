@@ -2,16 +2,207 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ZegoExpressEngine } from 'zego-express-engine-webrtc';
-import { IconMaximize, IconMinimize } from '@tabler/icons-react';
+import { IconEye, IconMaximize, IconMinimize } from '@tabler/icons-react';
+import { ApiService } from '@/lib/api-service';
 
+type LiveStreamViewerProps = {
+    liveId?: string;
+    autoResolveLiveId?: boolean;
+    pollIntervalMs?: number;
+};
 
-const LiveStreamViewer = () => {
+type StreamSummary = {
+    liveId?: string;
+    isActive?: boolean;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === 'object' && value !== null;
+
+const normaliseStreamList = (input: unknown): StreamSummary[] => {
+    const rawItems: unknown[] = Array.isArray(input)
+        ? input
+        : isRecord(input) && Array.isArray(input['livestreams'])
+            ? (input['livestreams'] as unknown[])
+            : [];
+
+    return rawItems
+        .filter(isRecord)
+        .map((item) => {
+            const record = item as Record<string, unknown>;
+            const liveId = typeof record['liveId'] === 'string' ? record['liveId'] : undefined;
+            const isActive = typeof record['isActive'] === 'boolean' ? record['isActive'] : undefined;
+            return { liveId, isActive } as StreamSummary;
+        });
+};
+
+const extractViewCount = (payload: unknown): number | null => {
+    if (!isRecord(payload)) {
+        return null;
+    }
+
+    const candidates = [payload['currentViewCount'], payload['viewCount']];
+    for (const candidate of candidates) {
+        if (typeof candidate === 'number') {
+            return candidate;
+        }
+    }
+
+    const livestream = payload['livestream'];
+    if (isRecord(livestream) && typeof livestream['viewCount'] === 'number') {
+        return livestream['viewCount'];
+    }
+
+    return null;
+};
+
+const LiveStreamViewer = ({
+    liveId: liveIdProp,
+    autoResolveLiveId = true,
+    pollIntervalMs = 15000,
+}: LiveStreamViewerProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    
+    const [viewCount, setViewCount] = useState<number>(0);
+    const [resolvedLiveId, setResolvedLiveId] = useState<string | null>(liveIdProp ?? null);
+    const [viewerIdReady, setViewerIdReady] = useState<boolean>(false);
+    const [joinError, setJoinError] = useState<string | null>(null);
+
     const engineRef = useRef<ZegoExpressEngine | null>(null);
     const currentStreamIdRef = useRef<string | null>(null);
+    const viewerIdRef = useRef<string | null>(null);
+    const hasJoinedRef = useRef<boolean>(false);
+    const pollHandleRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    useEffect(() => {
+        if (liveIdProp) {
+            setResolvedLiveId(liveIdProp);
+        }
+    }, [liveIdProp]);
+
+    useEffect(() => {
+        if (viewerIdRef.current) {
+            setViewerIdReady(true);
+            return;
+        }
+        if (typeof window === 'undefined') return;
+
+        const authToken = localStorage.getItem('auth_token');
+        if (authToken && authToken.trim()) {
+            viewerIdRef.current = authToken;
+        } else {
+            try {
+                let viewerId = sessionStorage.getItem('viewer_session_id');
+                if (!viewerId) {
+                    viewerId = `viewer_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                    sessionStorage.setItem('viewer_session_id', viewerId);
+                }
+                viewerIdRef.current = viewerId;
+            } catch (error) {
+                console.warn('Unable to persist viewer session id', error);
+                viewerIdRef.current = `viewer_${Date.now()}`;
+            }
+        }
+        setViewerIdReady(true);
+    }, []);
+
+    useEffect(() => {
+        if (liveIdProp || !autoResolveLiveId) {
+            return;
+        }
+
+        let isCancelled = false;
+
+        const resolveLiveStreamId = async () => {
+            if (typeof window === 'undefined') return;
+
+            const storedLiveId = localStorage.getItem('current_live_id');
+            if (storedLiveId) {
+                setResolvedLiveId(storedLiveId);
+                return;
+            }
+
+            try {
+                const rawStreams = await ApiService.fetchAllLiveStreams();
+                if (isCancelled) return;
+
+                const candidateList = normaliseStreamList(rawStreams);
+
+                const activeStream = candidateList.find((stream) => stream.isActive) ?? candidateList[0];
+
+                if (activeStream?.liveId) {
+                    setResolvedLiveId(activeStream.liveId);
+                } else {
+                    setResolvedLiveId(null);
+                }
+            } catch (error) {
+                console.error('Failed to resolve live stream ID', error);
+            }
+        };
+
+        resolveLiveStreamId();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [liveIdProp, autoResolveLiveId]);
+
+    useEffect(() => {
+        if (!resolvedLiveId || !viewerIdReady || !viewerIdRef.current) {
+            return;
+        }
+
+        let isCancelled = false;
+
+        const joinLivestream = async () => {
+            try {
+                setJoinError(null);
+                const response = await ApiService.joinLivestream(resolvedLiveId, viewerIdRef.current!);
+                hasJoinedRef.current = true;
+                const count = extractViewCount(response);
+                if (!isCancelled && typeof count === 'number') {
+                    setViewCount(count);
+                }
+            } catch (error) {
+                console.error('Failed to join livestream', error);
+                if (!isCancelled) {
+                    setJoinError('Unable to join livestream right now.');
+                }
+            }
+        };
+
+        const fetchLatestViewCount = async () => {
+            try {
+                const response = await ApiService.getLiveStreamDetails(resolvedLiveId);
+                const count = extractViewCount(response);
+                if (!isCancelled && typeof count === 'number') {
+                    setViewCount(count);
+                }
+            } catch (error) {
+                console.error('Failed to refresh livestream view count', error);
+            }
+        };
+
+        joinLivestream().then(() => {
+            if (!isCancelled) {
+                fetchLatestViewCount();
+                pollHandleRef.current = setInterval(fetchLatestViewCount, pollIntervalMs);
+            }
+        });
+
+        return () => {
+            isCancelled = true;
+            if (pollHandleRef.current) {
+                clearInterval(pollHandleRef.current);
+                pollHandleRef.current = null;
+            }
+            if (hasJoinedRef.current) {
+                ApiService.leaveLivestream(resolvedLiveId, viewerIdRef.current || '');
+                hasJoinedRef.current = false;
+            }
+        };
+    }, [resolvedLiveId, viewerIdReady, pollIntervalMs]);
 
     const startViewing = async () => {
         const appId = 1170382194;
@@ -78,21 +269,23 @@ const LiveStreamViewer = () => {
             if (remoteStream.getVideoTracks().length === 0) {
                 await attachVideo(remoteStream);
                 await new Promise<void>((resolve, reject) => {
-                    const onAddTrack = (ev: MediaStreamTrackEvent) => {
-                        if (ev.track.kind === 'video') {
-                            remoteStream.removeEventListener('addtrack', onAddTrack as any);
+                    let timeoutHandle: ReturnType<typeof setTimeout>;
+
+                    const onAddTrack = (event: Event) => {
+                        const trackEvent = event as MediaStreamTrackEvent;
+                        if (trackEvent.track.kind === 'video') {
+                            remoteStream.removeEventListener('addtrack', onAddTrack);
+                            clearTimeout(timeoutHandle);
                             resolve();
                         }
                     };
-                    // Fallback timeout to retry if no track arrives
-                    const timeout = setTimeout(() => {
-                        remoteStream.removeEventListener('addtrack', onAddTrack as any);
+
+                    timeoutHandle = setTimeout(() => {
+                        remoteStream.removeEventListener('addtrack', onAddTrack);
                         reject(new Error('No video track yet'));
                     }, RETRY_DELAY_MS);
-                    remoteStream.addEventListener('addtrack', (e: any) => {
-                        onAddTrack(e);
-                        clearTimeout(timeout);
-                    });
+
+                    remoteStream.addEventListener('addtrack', onAddTrack);
                 });
             }
 
@@ -112,23 +305,26 @@ const LiveStreamViewer = () => {
 
         // Optional: observe player state updates for debugging/visibility
         const zg = engineRef.current;
-        const onPlayerStateUpdate = (result: any) => {
-            // Log or update UI based on result.state ("PLAYING", "NO_PLAY", etc.)
-            // console.log('playerStateUpdate', result);
+        const onPlayerStateUpdate = (_result: unknown) => {
+            // Placeholder for potential state updates/logging
         };
-        zg?.on('playerStateUpdate', onPlayerStateUpdate as any);
+        zg?.on('playerStateUpdate', onPlayerStateUpdate);
 
         // If the stream updates (e.g., video starts publishing later), try reattaching
-        const onRoomStreamUpdate = async (_roomID: string, updateType: 'ADD' | 'DELETE', streamList: any[]) => {
-            if (updateType === 'ADD' && currentStreamIdRef.current) {
-                if (streamList.some((s) => s.streamID === currentStreamIdRef.current)) {
+        const onRoomStreamUpdate = async (
+            _roomID: string,
+            updateType: 'ADD' | 'DELETE',
+            streamList: Array<{ streamID?: string }>
+        ) => {
+            if (updateType === 'ADD' && currentStreamIdRef.current && zg) {
+                if (streamList.some((stream) => stream.streamID === currentStreamIdRef.current)) {
                     try {
-                        await playStreamWithRetry(zg!, currentStreamIdRef.current);
+                        await playStreamWithRetry(zg, currentStreamIdRef.current);
                     } catch {}
                 }
             }
         };
-        zg?.on('roomStreamUpdate', onRoomStreamUpdate as any);
+        zg?.on('roomStreamUpdate', onRoomStreamUpdate);
 
         // Sync fullscreen state when user presses Esc or toggles via browser UI
         const handleFsChange = () => {
@@ -228,38 +424,107 @@ const LiveStreamViewer = () => {
                 />
             </div>
 
-            <span
+            <div
                 style={{
                 position: 'absolute',
                 top: '12px',
                 left: '12px',
-                background: 'rgba(220,0,0,0.9)',
-                color: '#fff',
-                fontSize: '12px',
-                fontWeight: 600,
-                padding: '4px 10px',
-                borderRadius: '6px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                letterSpacing: '0.5px',
-                fontFamily: 'system-ui, sans-serif',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
-                userSelect: 'none'
+                gap: '8px',
+                zIndex: 2
                 }}
             >
                 <span
                 style={{
+                    background: 'rgba(220,0,0,0.9)',
+                    color: '#fff',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    letterSpacing: '0.5px',
+                    fontFamily: 'system-ui, sans-serif',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                    userSelect: 'none'
+                }}
+                >
+                <span
+                    style={{
                     display: 'inline-block',
                     width: '8px',
                     height: '8px',
                     background: '#fff',
                     borderRadius: '50%',
                     animation: 'pulse 1.4s infinite'
-                }}
+                    }}
                 />
                 LIVE
-            </span>
+                </span>
+                <span
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(15,23,42,0.85)',
+                    color: '#fff',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                    letterSpacing: '0.4px'
+                }}
+                >
+                <IconEye size={16} stroke={1.6} />
+                {Math.max(0, viewCount).toLocaleString()}
+                </span>
+            </div>
+
+            {!resolvedLiveId && (
+                <div
+                style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'rgba(15,23,42,0.75)',
+                    color: '#fff',
+                    padding: '12px 18px',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    textAlign: 'center',
+                    maxWidth: '260px',
+                    lineHeight: 1.4,
+                    zIndex: 1
+                }}
+                >
+                No active livestream detected yet.
+                </div>
+            )}
+
+            {joinError && resolvedLiveId && (
+                <div
+                style={{
+                    position: 'absolute',
+                    bottom: '16px',
+                    left: '16px',
+                    background: 'rgba(15,23,42,0.75)',
+                    color: '#fff',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    lineHeight: 1.4,
+                    maxWidth: '260px',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.25)'
+                }}
+                >
+                {joinError}
+                </div>
+            )}
 
             {/* Fullscreen toggle button */}
             <button
