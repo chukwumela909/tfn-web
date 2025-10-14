@@ -29,6 +29,7 @@ export default function ProfileComponent() {
   const [authCode, setAuthCode] = useState('');
   const [authError, setAuthError] = useState('');
   const [isStartingLive, setIsStartingLive] = useState(false);
+  const [streamTitle, setStreamTitle] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export default function ProfileComponent() {
         
         // Store user data for future use
         localStorage.setItem('user_name', userData.channelName);
+        localStorage.setItem('channel_name', userData.channelName);
         localStorage.setItem('user_data', JSON.stringify(userData));
         setError('');
       } else {
@@ -117,12 +119,18 @@ export default function ProfileComponent() {
   const handleStartLivestream = () => {
     setAuthCode('');
     setAuthError('');
+    setStreamTitle('');
     setShowAuthModal(true);
   };
 
   const confirmStartLivestream = async () => {
     if (authCode.trim() !== 'admin123') {
       setAuthError('Invalid code. Please try again.');
+      return;
+    }
+
+    if (!streamTitle.trim()) {
+      setAuthError('Please enter a stream title.');
       return;
     }
 
@@ -134,19 +142,25 @@ export default function ProfileComponent() {
     try {
       setIsStartingLive(true);
       setAuthError('');
-      const res = await ApiService.createLiveStream({ userId: userData.userId, streamType: 'rtmp' });
+      
+      // Call new Mux API to create stream
+      const response = await fetch('/api/streams/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: streamTitle, userId: userData.userId }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create stream');
+
+      const data = await response.json();
       
       // Save the complete response to localStorage for the host-stream page
       try { 
-        localStorage.setItem('host_stream_data', JSON.stringify(res)); 
+        localStorage.setItem('host_stream_data', JSON.stringify(data)); 
       } catch (e) {
         console.error('Failed to save host stream data:', e);
       }
       
-      const liveId = res?.liveId || res?.id || res?.data?.liveId || res?.data?.id || res?.livestreamId || res?.livestream?.id;
-      if (liveId) {
-        try { localStorage.setItem('current_live_id', String(liveId)); } catch {}
-      }
       setShowAuthModal(false);
       router.push('/host-stream');
     } catch (e) {
@@ -313,16 +327,37 @@ export default function ProfileComponent() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowAuthModal(false)} />
           <div className="relative z-[101] w-[90%] max-w-md rounded-2xl bg-slate-800 border border-slate-700 p-6 shadow-2xl">
-            <h3 className="text-lg font-semibold mb-2">Authorization Required</h3>
-            <p className="text-sm text-slate-300 mb-4">Enter the admin code to start a livestream.</p>
+            <h3 className="text-lg font-semibold mb-2">Create New Livestream</h3>
+            <p className="text-sm text-slate-300 mb-4">Enter the admin code and stream title to start broadcasting.</p>
 
-            <input
-              type="password"
-              value={authCode}
-              onChange={(e) => setAuthCode(e.target.value)}
-              placeholder="Enter code"
-              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 outline-none focus:border-blue-500"
-            />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Stream Title
+                </label>
+                <input
+                  type="text"
+                  value={streamTitle}
+                  onChange={(e) => setStreamTitle(e.target.value)}
+                  placeholder="Enter your stream title"
+                  className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-white placeholder-slate-500 outline-none focus:border-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Admin Code
+                </label>
+                <input
+                  type="password"
+                  value={authCode}
+                  onChange={(e) => setAuthCode(e.target.value)}
+                  placeholder="Enter admin code"
+                  className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-white placeholder-slate-500 outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+            
             {authError && <p className="text-red-400 text-sm mt-2">{authError}</p>}
 
             <div className="mt-5 flex items-center justify-end gap-3">
@@ -338,7 +373,7 @@ export default function ProfileComponent() {
                 disabled={isStartingLive}
                 className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-60"
               >
-                {isStartingLive ? 'Starting…' : 'Start Livestream'}
+                {isStartingLive ? 'Creating...' : 'Create Stream'}
               </button>
             </div>
           </div>

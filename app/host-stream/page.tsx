@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import dynamic from 'next/dynamic';
-import { ApiService } from '@/lib/api-service';
 
   const LiveStreamViewer = dynamic(() => import('../../components/dashboard/StreamPlay'), {
   ssr: false, // Disable server-side rendering for this component
@@ -12,15 +11,19 @@ import { ApiService } from '@/lib/api-service';
 });
 
 type HostData = {
-  message?: string;
-  streamType?: string;
-  liveId?: string;
-  livedata?: {
-    Code?: number;
-    Message?: string;
-    RequestId?: string;
-    Data?: string[];
+  stream: {
+    _id: string;
+    muxStreamId: string;
+    muxPlaybackId: string;
+    title: string;
+    userId: string;
+    rtmpUrl: string;
+    streamKey: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
   };
+  rtmpIngestUrl?: string;
 };
 
 export default function HostStreamPage() {
@@ -44,7 +47,12 @@ export default function HostStreamPage() {
     }
   }, []);
 
-  const rtmpUrls = useMemo(() => data?.livedata?.Data ?? [], [data]);
+  const rtmpServer = useMemo(() => data?.stream?.rtmpUrl ?? '', [data]);
+  const streamKey = useMemo(() => data?.stream?.streamKey ?? '', [data]);
+  const fullRtmpUrl = useMemo(() => {
+    if (!rtmpServer || !streamKey) return '';
+    return `${rtmpServer}/${streamKey}`;
+  }, [rtmpServer, streamKey]);
 
   const copy = async (text: string) => {
     try {
@@ -56,10 +64,9 @@ export default function HostStreamPage() {
   };
 
   const endLivestream = async () => {
-    const user_data = localStorage.getItem('user_data');
-    const user_id = user_data ? JSON.parse(user_data).userId : null;
-
-    if (!data?.liveId) {
+    console.log('Attempting to end livestream with data:', data);
+    
+    if (!data?.stream?.muxStreamId) {
       alert('No live stream to end');
       return;
     }
@@ -70,28 +77,31 @@ export default function HostStreamPage() {
 
     setIsEnding(true);
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        alert('No authentication token found');
-        return;
-      }
-
-      // const userData = await ApiService.getUserData(token);
-      // if (!userData.success || !userData.user?.id) {
-      //   alert('Failed to get user data');
-      //   return;
-      // }
-
-      const result = await ApiService.endLiveStream(data.liveId, user_id);
-
-
+      const url = '/api/streams/delete';
+      console.log('Sending POST request to:', url);
+      console.log('With muxStreamId:', data.stream.muxStreamId);
       
-      if (result.message === 'Livestream ended successfully') {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          muxStreamId: data.stream.muxStreamId 
+        }),
+      });
+
+      console.log('End livestream response status:', response.status);
+      const responseData = await response.json();
+      console.log('End livestream response data:', responseData);
+
+      if (response.ok) {
         alert('Livestream ended successfully');
         localStorage.removeItem('host_stream_data');
         router.push('/dashboard');
       } else {
-        alert(result.message || 'Failed to end livestream');
+        console.error('Failed to end stream:', responseData);
+        alert(`Failed to end livestream: ${responseData.error || 'Unknown error'}\n\nCheck console for details.`);
       }
     } catch (error) {
       console.error('Error ending livestream:', error);
@@ -104,10 +114,10 @@ export default function HostStreamPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-white p-4 pb-20 lg:pb-4">
       <div className="max-w-3xl mx-auto lg:ml-64">
-        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Host Stream</h1>
           <div className="flex gap-3">
-            {data?.liveId && (
+            {/* {data?.stream?.muxStreamId && (
               <Button
                 onClick={endLivestream}
                 disabled={isEnding}
@@ -115,7 +125,7 @@ export default function HostStreamPage() {
               >
                 {isEnding ? 'Ending...' : 'End Livestream'}
               </Button>
-            )}
+            )} */}
             <Button
               onClick={() => router.back()}
               className="bg-slate-700 hover:bg-slate-600 text-white border-0"
@@ -123,9 +133,7 @@ export default function HostStreamPage() {
               ← Back
             </Button>
           </div>
-        </div>
-
-        {!data ? (
+        </div>        {!data ? (
           <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">
             <p className="text-slate-300">No livestream data found. Please start a new livestream.</p>
             <div className="mt-2 text-xs text-slate-400">
@@ -157,66 +165,117 @@ export default function HostStreamPage() {
               <p className="text-slate-300 text-sm mb-4">
                 This will show your stream once it starts broadcasting from OBS. It may take a few moments to appear.
               </p>
-              <LiveStreamViewer liveId={data?.liveId} autoResolveLiveId={false} />
+              <LiveStreamViewer />
             </div>
 
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-2">Livestream Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300">
-                <div>
-                  <div className="text-slate-400 text-sm">Message</div>
-                  <div className="font-medium">{data.message ?? '—'}</div>
+                <div className="md:col-span-2">
+                  <div className="text-slate-400 text-sm">Stream Title</div>
+                  <div className="font-semibold text-lg">{data.stream.title}</div>
                 </div>
                 <div>
-                  <div className="text-slate-400 text-sm">Stream Type</div>
-                  <div className="font-medium">{data.streamType ?? '—'}</div>
+                  <div className="text-slate-400 text-sm">Status</div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      data.stream.status === 'active' 
+                        ? 'bg-red-600 text-white' 
+                        : 'bg-yellow-600 text-white'
+                    }`}>
+                      {data.stream.status === 'active' ? 'LIVE' : 'IDLE'}
+                    </span>
+                    <span className="capitalize">{data.stream.status}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-slate-400 text-sm">Created</div>
+                  <div className="font-medium">{new Date(data.stream.createdAt).toLocaleString()}</div>
                 </div>
                 <div className="md:col-span-2">
-                  <div className="text-slate-400 text-sm">Live ID</div>
-                  <div className="font-mono text-sm break-all">{data.liveId ?? '—'}</div>
+                  <div className="text-slate-400 text-sm">Mux Stream ID</div>
+                  <div className="font-mono text-sm break-all">{data.stream.muxStreamId}</div>
                 </div>
-                <div>
-                  <div className="text-slate-400 text-sm">Zego Status</div>
-                  <div className="font-medium">{data.livedata?.Message ?? '—'} (Code {data.livedata?.Code ?? '—'})</div>
+                <div className="md:col-span-2">
+                  <div className="text-slate-400 text-sm">Playback ID</div>
+                  <div className="font-mono text-sm break-all">{data.stream.muxPlaybackId}</div>
                 </div>
-                <div>
-                  <div className="text-slate-400 text-sm">Request ID</div>
-                  <div className="font-mono text-xs break-all">{data.livedata?.RequestId ?? '—'}</div>
+                <div className="md:col-span-2">
+                  <div className="text-slate-400 text-sm">User ID</div>
+                  <div className="font-mono text-xs break-all">{data.stream.userId}</div>
                 </div>
               </div>
             </div>
 
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-3">RTMP Endpoints</h2>
-              {rtmpUrls.length === 0 ? (
-                <p className="text-slate-300">No RTMP endpoints returned. Try creating the livestream again.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {rtmpUrls.map((url, idx) => (
-                    <li key={idx} className="flex items-center justify-between gap-3">
-                      <div className="font-mono text-sm break-all">{url}</div>
-                      <Button
-                        onClick={() => copy(url)}
-                        className="bg-slate-700 hover:bg-slate-600 text-white border-0"
-                      >
-                        Copy
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <h2 className="text-xl font-semibold mb-3">RTMP Configuration</h2>
+              <div className="space-y-4">
+                {/* RTMP Server URL */}
+                <div>
+                  <div className="text-slate-400 text-sm mb-2">RTMP Server URL</div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 font-mono text-sm break-all">
+                      {rtmpServer}
+                    </div>
+                    <Button
+                      onClick={() => copy(rtmpServer)}
+                      className="bg-slate-700 hover:bg-slate-600 text-white border-0"
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Stream Key */}
+                <div>
+                  <div className="text-slate-400 text-sm mb-2">Stream Key</div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 font-mono text-sm break-all">
+                      {streamKey}
+                    </div>
+                    <Button
+                      onClick={() => copy(streamKey)}
+                      className="bg-slate-700 hover:bg-slate-600 text-white border-0"
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Full RTMP URL */}
+                <div>
+                  <div className="text-slate-400 text-sm mb-2">Full RTMP URL (Alternative)</div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 font-mono text-xs break-all">
+                      {fullRtmpUrl}
+                    </div>
+                    <Button
+                      onClick={() => copy(fullRtmpUrl)}
+                      className="bg-slate-700 hover:bg-slate-600 text-white border-0"
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-2">How to use with OBS</h2>
-              <ol className="list-decimal list-inside text-slate-300 space-y-1">
-                <li>Open OBS and go to Settings → Stream.</li>
-                <li>Select Service: Custom.</li>
-                <li>Pick one RTMP URL above and paste it into the Server field.</li>
-                <li>Leave Stream Key empty if the URL already contains the path (e.g., ends with `/1170382194/rtc01`).</li>
-                <li>Recommended: Encoder H.264, CBR, 2s keyframe interval.</li>
-                <li>Start streaming. The viewer should pick up once video starts publishing.</li>
+              <h2 className="text-xl font-semibold mb-2">How to use with OBS Studio</h2>
+              <ol className="list-decimal list-inside text-slate-300 space-y-2">
+                <li>Open OBS Studio and go to <strong>Settings → Stream</strong></li>
+                <li>Select <strong>Service: Custom</strong></li>
+                <li>Copy the <strong>RTMP Server URL</strong> from above and paste it into the <strong>Server</strong> field</li>
+                <li>Copy the <strong>Stream Key</strong> from above and paste it into the <strong>Stream Key</strong> field</li>
+                <li>Click <strong>OK</strong> to save settings</li>
+                <li>Configure your video sources and click <strong>Start Streaming</strong></li>
+                <li>Your stream will appear in the Live Stream Monitor above once OBS connects</li>
               </ol>
+              <div className="mt-4 p-3 bg-blue-900/20 border border-blue-700/50 rounded-lg">
+                <p className="text-sm text-slate-300">
+                  <strong>Recommended Settings:</strong> Encoder: H.264, Rate Control: CBR, Keyframe Interval: 2s, Bitrate: 2500-6000 Kbps
+                </p>
+              </div>
             </div>
           </div>
         )}

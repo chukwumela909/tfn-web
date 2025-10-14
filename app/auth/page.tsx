@@ -71,13 +71,14 @@ export default function AuthPage() {
           password: loginData.password
         });
 
-        console.log('Login response:', response.success );
+        console.log('Login response:', response );
 
         if ( response.token) {
           // Store authentication data
           localStorage.setItem('auth_token', response.token);
           localStorage.setItem('user_data', JSON.stringify(response.user));
           localStorage.setItem('user_name', response.user?.channelName || response.user?.email || 'User');
+          localStorage.setItem('channel_name', response.user?.channelName || response.user?.email || 'User');
 
           // Redirect to dashboard
           router.push('/dashboard');
