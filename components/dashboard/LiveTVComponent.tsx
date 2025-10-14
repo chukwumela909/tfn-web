@@ -11,6 +11,7 @@ interface Stream {
   muxStreamId: string;
   muxPlaybackId: string;
   status: 'active' | 'idle' | 'ended';
+  viewerCount?: number; // Add viewer count
   createdAt: string;
   updatedAt: string;
 }
@@ -128,7 +129,7 @@ export default function LiveTVComponent() {
                     
                     <div className="flex items-center gap-1 text-slate-400">
                       <IconEye className="w-4 h-4" />
-                      <span>•••</span>
+                      <span>{stream.viewerCount || 0}</span>
                     </div>
                   </div>
 

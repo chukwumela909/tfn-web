@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
 import { AlertCircle } from 'lucide-react';
 
-export default function StreamPlay() {
+interface StreamPlayProps {
+  onStreamInfoUpdate?: (streamInfo: any) => void;
+}
+
+export default function StreamPlay({ onStreamInfoUpdate }: StreamPlayProps) {
   const [playbackId, setPlaybackId] = useState<string | null>(null);
   const [streamInfo, setStreamInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -44,6 +48,11 @@ export default function StreamPlay() {
           console.log('StreamPlay - API stream data:', apiData);
           setStreamInfo(apiData.stream);
           setPlaybackId(apiData.stream.muxPlaybackId || data.stream.muxPlaybackId);
+          
+          // Notify parent component of stream info update
+          if (onStreamInfoUpdate) {
+            onStreamInfoUpdate(apiData.stream);
+          }
         } else {
           // Fallback to localStorage data
           setStreamInfo(data.stream);

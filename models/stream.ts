@@ -10,6 +10,8 @@ export interface IStream extends Document {
   streamKey: string;
   status: 'idle' | 'active' | 'ended';
   recordingAssetId?: string;
+  currentViewers: string[]; // Array of active viewer IDs
+  viewerCount: number; // Current count of active viewers
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +30,8 @@ const StreamSchema = new Schema<IStream>(
       default: 'idle' 
     },
     recordingAssetId: { type: String, required: false },
+    currentViewers: { type: [String], default: [] }, // Array of viewer IDs
+    viewerCount: { type: Number, default: 0 }, // Current viewer count
   },
   { timestamps: true }
 );

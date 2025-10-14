@@ -51,6 +51,8 @@ export async function POST(req: NextRequest) {
       rtmpUrl: `rtmps://global-live.mux.com:443/app`,
       streamKey: muxStream.stream_key || '',
       status: 'idle',
+      currentViewers: [],
+      viewerCount: 0,
     });
 
     // TODO: Save stream to database

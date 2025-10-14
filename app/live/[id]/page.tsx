@@ -13,6 +13,7 @@ interface StreamInfo {
   muxStreamId: string;
   muxPlaybackId: string;
   status: 'active' | 'idle' | 'ended';
+  viewerCount?: number; // Add viewer count
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +26,114 @@ export default function LiveStreamPage() {
   const [streamInfo, setStreamInfo] = useState<StreamInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [viewerId, setViewerId] = useState<string>('');
+
+  // Generate unique viewer ID
+  useEffect(() => {
+    let id = localStorage.getItem('viewerId');
+    if (!id) {
+      id = `viewer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('viewerId', id);
+    }
+    setViewerId(id);
+  }, []);
+
+  // Join stream when page loads
+  useEffect(() => {
+    if (!viewerId || !streamId) return;
+
+    const joinStream = async () => {
+      try {
+        await fetch('/api/streams/view/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+        });
+        console.log('Joined stream as viewer:', viewerId);
+      } catch (err) {
+        console.error('Failed to join stream:', err);
+      }
+    };
+
+    joinStream();
+
+    // Leave stream when page unloads
+    const handleBeforeUnload = () => {
+      navigator.sendBeacon('/api/streams/view/leave', 
+        JSON.stringify({ muxStreamId: streamId, viewerId })
+      );
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Leave stream when component unmounts
+      fetch('/api/streams/view/leave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+      }).catch(console.error);
+    };
+  }, [viewerId, streamId]);
+
+  // Send heartbeat every 10 seconds
+  useEffect(() => {
+    if (!viewerId || !streamId) return;
+
+    const heartbeat = setInterval(async () => {
+      try {
+        await fetch('/api/streams/view/heartbeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+        });
+      } catch (err) {
+        console.error('Heartbeat failed:', err);
+      }
+    }, 10000); // Every 10 seconds
+
+    return () => clearInterval(heartbeat);
+  }, [viewerId, streamId]);
+
+  // Handle page visibility (tab switching)
+  useEffect(() => {
+    if (!viewerId || !streamId) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        // Tab hidden - leave stream
+        try {
+          await fetch('/api/streams/view/leave', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+          });
+          console.log('Left stream (tab hidden)');
+        } catch (err) {
+          console.error('Failed to leave stream:', err);
+        }
+      } else {
+        // Tab visible again - rejoin stream
+        try {
+          await fetch('/api/streams/view/join', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+          });
+          console.log('Rejoined stream (tab visible)');
+        } catch (err) {
+          console.error('Failed to rejoin stream:', err);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [viewerId, streamId]);
 
   useEffect(() => {
     fetchStreamInfo();
@@ -165,7 +274,9 @@ export default function LiveStreamPage() {
                   <Eye className="w-5 h-5 text-slate-400" />
                   <div>
                     <div className="text-xs text-slate-500">Viewers</div>
-                    <div className="font-medium">••• watching</div>
+                    <div className="font-medium">
+                      {streamInfo.viewerCount || 0} watching
+                    </div>
                   </div>
                 </div>
 

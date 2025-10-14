@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
     // Try to get live stream status from Mux
     try {
       const muxStream = await mux.video.liveStreams.retrieve(muxStreamId);
+
       
       return NextResponse.json({
         stream: {
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
           rtmpUrl: stream.rtmpUrl,
           streamKey: stream.streamKey,
           status: muxStream.status, // Get real-time status from Mux
+          viewerCount: stream.viewerCount || 0, // Current viewer count
           createdAt: stream.createdAt,
           updatedAt: stream.updatedAt,
           recordingAssetId: stream.recordingAssetId,
@@ -82,6 +84,7 @@ export async function GET(req: NextRequest) {
           streamKey: stream.streamKey,
           status: stream.status, // Use database status as fallback
           createdAt: stream.createdAt,
+          viewerCount: stream.viewerCount || 0, // Current viewer count
           updatedAt: stream.updatedAt,
           recordingAssetId: stream.recordingAssetId,
         },
