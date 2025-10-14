@@ -215,14 +215,14 @@ export default function HostStreamPage() {
                   <div className="text-slate-400 text-sm">Mux Stream ID</div>
                   <div className="font-mono text-sm break-all">{data.stream.muxStreamId}</div>
                 </div>
-                <div className="md:col-span-2">
+                {/* <div className="md:col-span-2">
                   <div className="text-slate-400 text-sm">Playback ID</div>
                   <div className="font-mono text-sm break-all">{data.stream.muxPlaybackId}</div>
-                </div>
-                <div className="md:col-span-2">
+                </div> */}
+                {/* <div className="md:col-span-2">
                   <div className="text-slate-400 text-sm">User ID</div>
                   <div className="font-mono text-xs break-all">{data.stream.userId}</div>
-                </div>
+                </div> */}
               </div>
             </div>
 

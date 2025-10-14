@@ -1,4 +1,4 @@
-// Get stream details
+  // Get stream details
 import { NextRequest, NextResponse } from 'next/server';
 import mux from '@/lib/mux';
 import connectDB from '@/lib/mongodb';

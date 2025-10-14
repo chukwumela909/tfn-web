@@ -262,13 +262,13 @@ export default function LiveStreamPage() {
               <h1 className="text-2xl font-bold mb-4">{streamInfo.title}</h1>
               
               <div className="space-y-3">
-                <div className="flex items-center gap-3 text-slate-300">
+                {/* <div className="flex items-center gap-3 text-slate-300">
                   <User className="w-5 h-5 text-slate-400" />
                   <div>
                     <div className="text-xs text-slate-500">Streamer</div>
                     <div className="font-medium">Channel</div>
                   </div>
-                </div>
+                </div> */}
 
                 <div className="flex items-center gap-3 text-slate-300">
                   <Eye className="w-5 h-5 text-slate-400" />
@@ -303,20 +303,20 @@ export default function LiveStreamPage() {
             </div>
 
             {/* Stream ID Card (for debugging) */}
-            <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+            {/* <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
               <div className="text-xs text-slate-500 mb-1">Stream ID</div>
               <div className="text-xs font-mono text-slate-400 break-all">
                 {streamInfo.muxStreamId}
               </div>
-            </div>
+            </div> */}
 
             {/* Playback ID Card */}
-            <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+            {/* <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
               <div className="text-xs text-slate-500 mb-1">Playback ID</div>
               <div className="text-xs font-mono text-slate-400 break-all">
                 {streamInfo.muxPlaybackId}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 

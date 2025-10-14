@@ -31,7 +31,7 @@ export default function LiveTVComponent() {
   const fetchStreams = async () => {
     try {
       // Fetch only active streams
-      const response = await fetch('/api/streams/list?status=active');
+      const response = await fetch('/api/streams/list?status=idle');
       if (!response.ok) throw new Error('Failed to fetch streams');
       
       const data = await response.json();
