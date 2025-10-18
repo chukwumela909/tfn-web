@@ -127,10 +127,10 @@ export default function LiveTVComponent() {
                       <span className="truncate">Streamer</span>
                     </div>
                     
-                    <div className="flex items-center gap-1 text-slate-400">
+                    {/* <div className="flex items-center gap-1 text-slate-400">
                       <IconEye className="w-4 h-4" />
                       <span>{stream.viewerCount || 0}</span>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="mt-3 text-xs text-slate-500">

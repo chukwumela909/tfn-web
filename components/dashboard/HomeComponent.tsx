@@ -121,9 +121,9 @@ export default function HomeComponent() {
                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white">
                   LIVE
                 </span>
-                <span className="text-slate-400 text-sm">
+                {/* <span className="text-slate-400 text-sm">
                   {latestStream.viewerCount || 0} watching
-                </span>
+                </span> */}
               </div>
             </div>
           </div>
