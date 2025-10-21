@@ -13,60 +13,20 @@ import MuxPlayer from '@mux/mux-player-react';
 // Sample slider images converted to carousel format
 const slideData = [
   {
-    title: "Fellowship Network",
-    src: "/slider-images/image-1.jpg",
+    title: "Image 1",
+    src: "/new_images/img1.jpg",
   },
   {
-    title: "Live Worship",
-    src: "/slider-images/image-2.jpg",
+    title: "Image 2",
+    src: "/new_images/img2.png",
   },
   {
-    title: "Sunday Service",
-    src: "/slider-images/image-3.jpg",
+    title: "Image 3",
+    src: "/new_images/img3.png",
   },
   {
-    title: "Prayer Meeting",
-    src: "/slider-images/image-4.jpg",
-  },
-  {
-    title: "Bible Study",
-    src: "/slider-images/image-5.jpg",
-  },
-  {
-    title: "Youth Service",
-    src: "/slider-images/image-6.jpg",
-  },
-  {
-    title: "Community",
-    src: "/slider-images/image-7.jpg",
-  },
-  {
-    title: "Outreach",
-    src: "/slider-images/image-8.jpg",
-  },
-  {
-    title: "Testimonies",
-    src: "/slider-images/image-9.jpg",
-  },
-  {
-    title: "Ministry",
-    src: "/slider-images/image-10.jpg",
-  },
-  {
-    title: "Events",
-    src: "/slider-images/image-11.jpg",
-  },
-  {
-    title: "Resources",
-    src: "/slider-images/image-12.jpg",
-  },
-  {
-    title: "Connect",
-    src: "/slider-images/image-13.jpg",
-  },
-  {
-    title: "Blessing",
-    src: "/slider-images/image-14.jpg",
+    title: "Image 4",
+    src: "/new_images/img4.jpg",
   },
 ];
 
