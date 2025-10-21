@@ -37,7 +37,7 @@ export default function HomeComponent() {
   const [loadingStream, setLoadingStream] = useState(true);
 
   const autoplayPlugin = useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: false })
+    Autoplay({ delay: 5000, stopOnInteraction: false })
   );
 
   // Fetch the latest active stream
