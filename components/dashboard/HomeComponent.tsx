@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   Carousel,
@@ -10,6 +10,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import MuxPlayer from '@mux/mux-player-react';
+import Autoplay from 'embla-carousel-autoplay';
 // Sample slider images converted to carousel format
 const slideData = [
   {
@@ -34,6 +35,10 @@ export default function HomeComponent() {
   const [selectedImage, setSelectedImage] = useState<{ title: string; src: string } | null>(null);
   const [latestStream, setLatestStream] = useState<any>(null);
   const [loadingStream, setLoadingStream] = useState(true);
+
+  const autoplayPlugin = useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  );
 
   // Fetch the latest active stream
   useEffect(() => {
@@ -117,6 +122,7 @@ export default function HomeComponent() {
           <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6">Featured Content</h2>
           <div className="relative overflow-hidden w-full">
             <Carousel
+              plugins={[autoplayPlugin.current]}
               opts={{
                 align: "start",
                 loop: true,
@@ -155,6 +161,8 @@ export default function HomeComponent() {
               <CarouselNext className="hidden md:flex" />
             </Carousel>
           </div>
+
+          <p className='mx-auto text-center mt-4'>Slide to see more</p>
         </section>
 
       {/* Image Modal */}
