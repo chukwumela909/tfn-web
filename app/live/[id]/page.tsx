@@ -1,10 +1,10 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, User, Eye } from 'lucide-react';
+import { AlertCircle, User, Eye, Send } from 'lucide-react';
 
 interface StreamInfo {
   _id: string;
@@ -18,6 +18,15 @@ interface StreamInfo {
   updatedAt: string;
 }
 
+interface Comment {
+  _id: string;
+  streamId: string;
+  userId: string;
+  username: string;
+  text: string;
+  createdAt: string;
+}
+
 export default function LiveStreamPage() {
   const params = useParams();
   const router = useRouter();
@@ -27,8 +36,13 @@ export default function LiveStreamPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [viewerId, setViewerId] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentText, setCommentText] = useState('');
+  const [sendingComment, setSendingComment] = useState(false);
+  const commentsEndRef = useRef<HTMLDivElement>(null);
 
-  // Generate unique viewer ID
+  // Generate unique viewer ID and username
   useEffect(() => {
     let id = localStorage.getItem('viewerId');
     if (!id) {
@@ -36,6 +50,14 @@ export default function LiveStreamPage() {
       localStorage.setItem('viewerId', id);
     }
     setViewerId(id);
+
+    // Generate or get username
+    let name = localStorage.getItem('username');
+    if (!name) {
+      name = `User${Math.floor(Math.random() * 10000)}`;
+      localStorage.setItem('username', name);
+    }
+    setUsername(name);
   }, []);
 
   // Join stream when page loads
@@ -157,6 +179,65 @@ export default function LiveStreamPage() {
       setError('Stream not found or unavailable');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch comments
+  const fetchComments = async () => {
+    if (!streamId) return;
+    
+    try {
+      const response = await fetch(`/api/comments/list?streamId=${streamId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data.comments);
+        // Auto-scroll to bottom
+        setTimeout(() => {
+          commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  // Poll for new comments every 5 seconds
+  useEffect(() => {
+    if (!streamId) return;
+    
+    fetchComments();
+    const interval = setInterval(fetchComments, 5000);
+    
+    return () => clearInterval(interval);
+  }, [streamId]);
+
+  // Send comment
+  const handleSendComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!commentText.trim() || !viewerId || !username || sendingComment) return;
+    
+    setSendingComment(true);
+    try {
+      const response = await fetch('/api/comments/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          streamId,
+          userId: viewerId,
+          username,
+          text: commentText.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        setCommentText('');
+        fetchComments(); // Refresh comments
+      }
+    } catch (error) {
+      console.error('Error sending comment:', error);
+    } finally {
+      setSendingComment(false);
     }
   };
 
@@ -300,6 +381,55 @@ export default function LiveStreamPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Comments Section */}
+            <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+              <h2 className="text-lg font-semibold mb-3">Live Chat</h2>
+              
+              {/* Comments List */}
+              <div className="h-[400px] overflow-y-auto mb-3 space-y-2 bg-slate-900/50 rounded-lg p-3">
+                {comments.length === 0 ? (
+                  <div className="text-center text-slate-500 text-sm py-8">
+                    No comments yet. Be the first to comment!
+                  </div>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment._id} className="text-sm">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold text-blue-400">
+                          {comment.username}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {new Date(comment.createdAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <p className="text-slate-300 mt-1">{comment.text}</p>
+                    </div>
+                  ))
+                )}
+                <div ref={commentsEndRef} />
+              </div>
+
+              {/* Comment Input */}
+              <form onSubmit={handleSendComment} className="flex gap-2">
+                <input
+                  type="text"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Type a comment..."
+                  maxLength={500}
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={sendingComment}
+                />
+                <button
+                  type="submit"
+                  disabled={!commentText.trim() || sendingComment}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg px-4 py-2 flex items-center gap-2 transition-colors"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
             </div>
 
             {/* Stream ID Card (for debugging) */}
