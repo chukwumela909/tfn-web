@@ -41,6 +41,7 @@ export default function LiveStreamPage() {
   const [commentText, setCommentText] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
   const commentsEndRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(false);
 
   // Generate unique viewer ID and username
   useEffect(() => {
@@ -51,13 +52,21 @@ export default function LiveStreamPage() {
     }
     setViewerId(id);
 
-    // Generate or get username
-    let name = localStorage.getItem('username');
-    if (!name) {
-      name = `User${Math.floor(Math.random() * 10000)}`;
-      localStorage.setItem('username', name);
+    // Get username - prioritize channel_name for signed-in users
+    const channelName = localStorage.getItem('channel_name');
+    
+    if (channelName && channelName !== 'null' && channelName !== 'undefined') {
+      // Use signed-in user's channel name
+      setUsername(channelName);
+    } else {
+      // For guests, use or generate guest username
+      let guestName = localStorage.getItem('guest_username');
+      if (!guestName) {
+        guestName = `Guest${Math.floor(Math.random() * 10000)}`;
+        localStorage.setItem('guest_username', guestName);
+      }
+      setUsername(guestName);
     }
-    setUsername(name);
   }, []);
 
   // Join stream when page loads
@@ -191,10 +200,14 @@ export default function LiveStreamPage() {
       if (response.ok) {
         const data = await response.json();
         setComments(data.comments);
-        // Auto-scroll to bottom
-        setTimeout(() => {
-          commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+        
+        // Only auto-scroll if we just sent a comment
+        if (shouldAutoScrollRef.current) {
+          setTimeout(() => {
+            commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            shouldAutoScrollRef.current = false;
+          }, 100);
+        }
       }
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -215,7 +228,15 @@ export default function LiveStreamPage() {
   const handleSendComment = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!commentText.trim() || !viewerId || !username || sendingComment) return;
+    if (!commentText.trim() || !viewerId || sendingComment) return;
+    
+    // Strictly get the latest channel_name for authenticated users
+    const channelName = localStorage.getItem('channel_name');
+    const finalUsername = (channelName && channelName !== 'null' && channelName !== 'undefined') 
+      ? channelName 
+      : username;
+    
+    if (!finalUsername) return; // Don't send if no username available
     
     setSendingComment(true);
     try {
@@ -225,13 +246,14 @@ export default function LiveStreamPage() {
         body: JSON.stringify({
           streamId,
           userId: viewerId,
-          username,
+          username: finalUsername, // Use strictly verified username
           text: commentText.trim(),
         }),
       });
 
       if (response.ok) {
         setCommentText('');
+        shouldAutoScrollRef.current = true; // Enable auto-scroll for this update
         fetchComments(); // Refresh comments
       }
     } catch (error) {

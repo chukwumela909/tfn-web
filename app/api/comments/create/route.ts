@@ -32,6 +32,17 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
+    // Drop problematic index if it exists (one-time fix)
+    try {
+      await Comment.collection.dropIndex('commentId_1');
+      console.log('Dropped old commentId_1 index');
+    } catch (indexError: any) {
+      // Ignore if index doesn't exist
+      if (indexError.code !== 27) { // 27 = IndexNotFound
+        console.log('Index drop info:', indexError.message);
+      }
+    }
+
     // Create comment
     const comment = await Comment.create({
       streamId,
