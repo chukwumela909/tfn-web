@@ -69,29 +69,30 @@ export default function LiveStreamPage() {
     }
   }, []);
 
-  // Join stream when page loads
+  // Join site when page loads (track all visitors)
   useEffect(() => {
-    if (!viewerId || !streamId) return;
+    if (!viewerId) return;
 
-    const joinStream = async () => {
+    const joinSite = async () => {
       try {
+        // Use a fixed "site" identifier instead of streamId
         await fetch('/api/streams/view/join', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+          body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
         });
-        console.log('Joined stream as viewer:', viewerId);
+        console.log('Joined site as visitor:', viewerId);
       } catch (err) {
-        console.error('Failed to join stream:', err);
+        console.error('Failed to join site:', err);
       }
     };
 
-    joinStream();
+    joinSite();
 
-    // Leave stream when page unloads
+    // Leave site when page unloads
     const handleBeforeUnload = () => {
       navigator.sendBeacon('/api/streams/view/leave', 
-        JSON.stringify({ muxStreamId: streamId, viewerId })
+        JSON.stringify({ muxStreamId: 'site_visitors', viewerId })
       );
     };
 
@@ -99,25 +100,25 @@ export default function LiveStreamPage() {
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Leave stream when component unmounts
+      // Leave site when component unmounts
       fetch('/api/streams/view/leave', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+        body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
       }).catch(console.error);
     };
-  }, [viewerId, streamId]);
+  }, [viewerId]);
 
   // Send heartbeat every 10 seconds
   useEffect(() => {
-    if (!viewerId || !streamId) return;
+    if (!viewerId) return;
 
     const heartbeat = setInterval(async () => {
       try {
         await fetch('/api/streams/view/heartbeat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+          body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
         });
       } catch (err) {
         console.error('Heartbeat failed:', err);
@@ -125,36 +126,36 @@ export default function LiveStreamPage() {
     }, 10000); // Every 10 seconds
 
     return () => clearInterval(heartbeat);
-  }, [viewerId, streamId]);
+  }, [viewerId]);
 
   // Handle page visibility (tab switching)
   useEffect(() => {
-    if (!viewerId || !streamId) return;
+    if (!viewerId) return;
 
     const handleVisibilityChange = async () => {
       if (document.hidden) {
-        // Tab hidden - leave stream
+        // Tab hidden - leave site
         try {
           await fetch('/api/streams/view/leave', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+            body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
           });
-          console.log('Left stream (tab hidden)');
+          console.log('Left site (tab hidden)');
         } catch (err) {
-          console.error('Failed to leave stream:', err);
+          console.error('Failed to leave site:', err);
         }
       } else {
-        // Tab visible again - rejoin stream
+        // Tab visible again - rejoin site
         try {
           await fetch('/api/streams/view/join', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ muxStreamId: streamId, viewerId }),
+            body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
           });
-          console.log('Rejoined stream (tab visible)');
+          console.log('Rejoined site (tab visible)');
         } catch (err) {
-          console.error('Failed to rejoin stream:', err);
+          console.error('Failed to rejoin site:', err);
         }
       }
     };
@@ -164,7 +165,7 @@ export default function LiveStreamPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [viewerId, streamId]);
+  }, [viewerId]);
 
   useEffect(() => {
     fetchStreamInfo();
