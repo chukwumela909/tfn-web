@@ -35,10 +35,79 @@ export default function HomeComponent() {
   const [selectedImage, setSelectedImage] = useState<{ title: string; src: string } | null>(null);
   const [latestStream, setLatestStream] = useState<any>(null);
   const [loadingStream, setLoadingStream] = useState(true);
+  const [viewerId, setViewerId] = useState<string>('');
 
   const autoplayPlugin = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: false })
   );
+
+  // Generate unique viewer ID
+  useEffect(() => {
+    let id = localStorage.getItem('viewerId');
+    if (!id) {
+      id = `viewer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('viewerId', id);
+    }
+    setViewerId(id);
+    console.log('Home page viewerId:', id);
+  }, []);
+
+  // Join site tracking when home page loads
+  useEffect(() => {
+    if (!viewerId) return;
+
+    const joinSite = async () => {
+      try {
+        await fetch('/api/streams/view/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
+        });
+        console.log('Joined site from home page:', viewerId);
+      } catch (err) {
+        console.error('Failed to join site from home:', err);
+      }
+    };
+
+    joinSite();
+
+    // Leave site when page unloads
+    const handleBeforeUnload = () => {
+      navigator.sendBeacon('/api/streams/view/leave', 
+        JSON.stringify({ muxStreamId: 'site_visitors', viewerId })
+      );
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      fetch('/api/streams/view/leave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
+      }).catch(console.error);
+    };
+  }, [viewerId]);
+
+  // Send heartbeat every 10 seconds
+  useEffect(() => {
+    if (!viewerId) return;
+
+    const heartbeat = setInterval(async () => {
+      try {
+        await fetch('/api/streams/view/heartbeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
+        });
+      } catch (err) {
+        console.error('Heartbeat failed:', err);
+      }
+    }, 10000);
+
+    return () => clearInterval(heartbeat);
+  }, [viewerId]);
 
   // Fetch the latest active stream
   useEffect(() => {

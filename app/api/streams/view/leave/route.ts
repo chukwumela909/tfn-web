@@ -34,11 +34,18 @@ export async function POST(req: NextRequest) {
       stream.viewerCount = 0;
     }
 
+    // Initialize viewerHeartbeats map if it doesn't exist
+    if (!stream.viewerHeartbeats) {
+      stream.viewerHeartbeats = new Map();
+    }
+
     // Remove viewer from list
     const index = stream.currentViewers.indexOf(viewerId);
     if (index > -1) {
       stream.currentViewers.splice(index, 1);
+      stream.viewerHeartbeats.delete(viewerId); // Remove from heartbeats map
       stream.viewerCount = stream.currentViewers.length;
+      stream.markModified('viewerHeartbeats'); // Mark map as modified for Mongoose
       await stream.save();
       console.log(`Viewer ${viewerId} left. Total viewers: ${stream.viewerCount}`);
     } else {

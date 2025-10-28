@@ -31,6 +31,84 @@ export default function HostStreamPage() {
   const [data, setData] = useState<HostData | null>(null);
   const [isEnding, setIsEnding] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
+  const [viewerId, setViewerId] = useState<string>('');
+
+  // Generate unique viewer ID for the host
+  useEffect(() => {
+    let id = localStorage.getItem('viewerId');
+    if (!id) {
+      id = `viewer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('viewerId', id);
+    }
+    setViewerId(id);
+    console.log('Host viewerId:', id);
+  }, []);
+
+  // Join site tracking when host page loads
+  useEffect(() => {
+    if (!viewerId) return;
+
+    const joinSite = async () => {
+      try {
+        const response = await fetch('/api/streams/view/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
+        });
+        const result = await response.json();
+        console.log('Host joined site. Response:', result);
+        if (result.viewerCount !== undefined) {
+          setViewerCount(result.viewerCount);
+        }
+      } catch (err) {
+        console.error('Host failed to join site:', err);
+      }
+    };
+
+    joinSite();
+
+    // Leave site when page unloads
+    const handleBeforeUnload = () => {
+      navigator.sendBeacon('/api/streams/view/leave', 
+        JSON.stringify({ muxStreamId: 'site_visitors', viewerId })
+      );
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Leave site when component unmounts
+      fetch('/api/streams/view/leave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
+      }).catch(console.error);
+    };
+  }, [viewerId]);
+
+  // Send heartbeat every 10 seconds
+  useEffect(() => {
+    if (!viewerId) return;
+
+    const heartbeat = setInterval(async () => {
+      try {
+        const response = await fetch('/api/streams/view/heartbeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ muxStreamId: 'site_visitors', viewerId }),
+        });
+        const result = await response.json();
+        if (result.viewerCount !== undefined) {
+          setViewerCount(result.viewerCount);
+        }
+      } catch (err) {
+        console.error('Heartbeat failed:', err);
+      }
+    }, 10000);
+
+    return () => clearInterval(heartbeat);
+  }, [viewerId]);
 
   // Callback to receive stream info updates from StreamPlay component
   const handleStreamInfoUpdate = (streamInfo: any) => {

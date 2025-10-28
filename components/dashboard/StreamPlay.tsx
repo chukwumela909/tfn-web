@@ -16,8 +16,8 @@ export default function StreamPlay({ onStreamInfoUpdate }: StreamPlayProps) {
 
   useEffect(() => {
     fetchStreamInfo();
-    // Poll for stream status every 10 seconds
-    const interval = setInterval(fetchStreamInfo, 10000);
+    // Poll for stream status every 2 seconds
+    const interval = setInterval(fetchStreamInfo, 2000);
     return () => clearInterval(interval);
   }, []);
 

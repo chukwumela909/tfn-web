@@ -43,6 +43,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Get site-wide visitor count from the 'site_visitors' virtual stream
+    const siteVisitorsStream = await Stream.findOne({ muxStreamId: 'site_visitors' });
+    const siteWideViewerCount = siteVisitorsStream?.viewerCount || 0;
+
     // Try to get live stream status from Mux
     try {
       const muxStream = await mux.video.liveStreams.retrieve(muxStreamId);
@@ -58,7 +62,7 @@ export async function GET(req: NextRequest) {
           rtmpUrl: stream.rtmpUrl,
           streamKey: stream.streamKey,
           status: muxStream.status, // Get real-time status from Mux
-          viewerCount: stream.viewerCount || 0, // Current viewer count
+          viewerCount: siteWideViewerCount, // Site-wide visitor count
           createdAt: stream.createdAt,
           updatedAt: stream.updatedAt,
           recordingAssetId: stream.recordingAssetId,
@@ -84,7 +88,7 @@ export async function GET(req: NextRequest) {
           streamKey: stream.streamKey,
           status: stream.status, // Use database status as fallback
           createdAt: stream.createdAt,
-          viewerCount: stream.viewerCount || 0, // Current viewer count
+          viewerCount: siteWideViewerCount, // Site-wide visitor count
           updatedAt: stream.updatedAt,
           recordingAssetId: stream.recordingAssetId,
         },
