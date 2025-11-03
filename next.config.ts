@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
+        source: '/api/:path*', 
         destination: 'https://wordcast.onrender.com/api/:path*',
       },
     ];

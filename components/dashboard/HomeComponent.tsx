@@ -29,6 +29,10 @@ const slideData = [
     title: "Image 4",
     src: "/new_images/img4.jpg",
   },
+  {
+    title: "Image 5",
+    src: "/new_images/img5.jpg",
+  },
 ];
 
 export default function HomeComponent() {
