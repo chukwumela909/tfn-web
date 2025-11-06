@@ -40,10 +40,38 @@ export default function HomeComponent() {
   const [latestStream, setLatestStream] = useState<any>(null);
   const [loadingStream, setLoadingStream] = useState(true);
   const [viewerId, setViewerId] = useState<string>('');
+  const [simulatedViewerCount, setSimulatedViewerCount] = useState(0);
 
   const autoplayPlugin = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: false })
   );
+
+  // Generate random viewer count between 40,000 and 70,000
+  useEffect(() => {
+    // Initial random count
+    const generateRandomCount = () => {
+      return Math.floor(Math.random() * (70000 - 40000 + 1)) + 40000;
+    };
+    
+    setSimulatedViewerCount(generateRandomCount());
+
+    // Update count every 3-5 seconds with slight variations
+    const interval = setInterval(() => {
+      setSimulatedViewerCount(prev => {
+        // Small random change (-500 to +500) to make it look more realistic
+        const change = Math.floor(Math.random() * 1000) - 500;
+        let newCount = prev + change;
+        
+        // Keep it within bounds
+        if (newCount < 40000) newCount = 40000;
+        if (newCount > 70000) newCount = 70000;
+        
+        return newCount;
+      });
+    }, Math.random() * 2000 + 3000); // Random interval between 3-5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Generate unique viewer ID
   useEffect(() => {
@@ -159,9 +187,13 @@ export default function HomeComponent() {
                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white">
                   LIVE
                 </span>
-                {/* <span className="text-slate-400 text-sm">
-                  {latestStream.viewerCount || 0} watching
-                </span> */}
+                <span className="text-slate-400 text-sm flex items-center gap-1">
+                  <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                  </svg>
+                  {simulatedViewerCount.toLocaleString()} watching
+                </span>
               </div>
             </div>
           </div>

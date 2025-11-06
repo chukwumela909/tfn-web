@@ -42,6 +42,65 @@ export default function LiveStreamPage() {
   const [sendingComment, setSendingComment] = useState(false);
   const commentsEndRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(false);
+  const [simulatedViewerCount, setSimulatedViewerCount] = useState(0);
+
+  // Generate random viewer count between 40,000 and 70,000
+  useEffect(() => {
+    // Initial random count
+    const generateRandomCount = () => {
+      return Math.floor(Math.random() * (70000 - 40000 + 1)) + 40000;
+    };
+    
+    setSimulatedViewerCount(generateRandomCount());
+
+    // Update count every 3-5 seconds with slight variations
+    const interval = setInterval(() => {
+      setSimulatedViewerCount(prev => {
+        // Small random change (-500 to +500) to make it look more realistic
+        const change = Math.floor(Math.random() * 1000) - 500;
+        let newCount = prev + change;
+        
+        // Keep it within bounds
+        if (newCount < 40000) newCount = 40000;
+        if (newCount > 70000) newCount = 70000;
+        
+        return newCount;
+      });
+    }, Math.random() * 2000 + 3000); // Random interval between 3-5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Server-side simulated comments - Generate comments on server every 0.8 seconds
+  useEffect(() => {
+    if (!streamId) return;
+
+    const generateSimulatedComment = async () => {
+      try {
+        await fetch('/api/comments/simulate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ streamId }),
+        });
+        // Don't need to handle response - fetchComments will pick it up
+      } catch (error) {
+        console.error('Error generating simulated comment:', error);
+      }
+    };
+
+    // Generate initial burst of comments (5-8 comments quickly)
+    const initialBurst = Math.floor(Math.random() * 4) + 5;
+    for (let i = 0; i < initialBurst; i++) {
+      setTimeout(() => generateSimulatedComment(), i * 200);
+    }
+
+    // Continue generating comments every 0.8 seconds for fast flow
+    const commentInterval = setInterval(() => {
+      generateSimulatedComment();
+    }, 800); // Every 0.8 seconds for rapid comments
+
+    return () => clearInterval(commentInterval);
+  }, [streamId]);
 
   // Generate unique viewer ID and username
   useEffect(() => {
@@ -200,10 +259,15 @@ export default function LiveStreamPage() {
       const response = await fetch(`/api/comments/list?streamId=${streamId}`);
       if (response.ok) {
         const data = await response.json();
-        setComments(data.comments);
+        const newComments = data.comments;
         
-        // Only auto-scroll if we just sent a comment
-        if (shouldAutoScrollRef.current) {
+        // Check if there are new comments
+        const hasNewComments = newComments.length > comments.length;
+        
+        setComments(newComments);
+        
+        // Auto-scroll if new comments arrived or user just sent a comment
+        if (hasNewComments || shouldAutoScrollRef.current) {
           setTimeout(() => {
             commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
             shouldAutoScrollRef.current = false;
@@ -215,12 +279,12 @@ export default function LiveStreamPage() {
     }
   };
 
-  // Poll for new comments every 5 seconds
+  // Poll for new comments every 1.5 seconds for fast updates
   useEffect(() => {
     if (!streamId) return;
     
     fetchComments();
-    const interval = setInterval(fetchComments, 5000);
+    const interval = setInterval(fetchComments, 1500); // Poll every 1.5 seconds
     
     return () => clearInterval(interval);
   }, [streamId]);
@@ -374,15 +438,15 @@ export default function LiveStreamPage() {
                   </div>
                 </div> */}
 
-                {/* <div className="flex items-center gap-3 text-slate-300">
+                <div className="flex items-center gap-3 text-slate-300">
                   <Eye className="w-5 h-5 text-slate-400" />
                   <div>
                     <div className="text-xs text-slate-500">Viewers</div>
                     <div className="font-medium">
-                      {streamInfo.viewerCount || 0} watching
+                      {simulatedViewerCount.toLocaleString()} watching
                     </div>
                   </div>
-                </div> */}
+                </div>
 
                 <div className="pt-3 border-t border-slate-700">
                   <div className="text-xs text-slate-500 mb-1">Started</div>
@@ -410,8 +474,8 @@ export default function LiveStreamPage() {
             <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
               <h2 className="text-lg font-semibold mb-3">Live Chat</h2>
               
-              {/* Comments List */}
-              <div className="h-[400px] overflow-y-auto mb-3 space-y-2 bg-slate-900/50 rounded-lg p-3">
+              {/* Comments List - Scrollable */}
+              <div className="h-[500px] overflow-y-auto mb-3 space-y-2 bg-slate-900/50 rounded-lg p-3 scroll-smooth">
                 {comments.length === 0 ? (
                   <div className="text-center text-slate-500 text-sm py-8">
                     No comments yet. Be the first to comment!
