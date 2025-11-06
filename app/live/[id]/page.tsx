@@ -40,8 +40,6 @@ export default function LiveStreamPage() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
-  const commentsEndRef = useRef<HTMLDivElement>(null);
-  const shouldAutoScrollRef = useRef(false);
   const [simulatedViewerCount, setSimulatedViewerCount] = useState(0);
 
   // Generate random viewer count between 40,000 and 70,000
@@ -261,18 +259,7 @@ export default function LiveStreamPage() {
         const data = await response.json();
         const newComments = data.comments;
         
-        // Check if there are new comments
-        const hasNewComments = newComments.length > comments.length;
-        
         setComments(newComments);
-        
-        // Auto-scroll if new comments arrived or user just sent a comment
-        if (hasNewComments || shouldAutoScrollRef.current) {
-          setTimeout(() => {
-            commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-            shouldAutoScrollRef.current = false;
-          }, 100);
-        }
       }
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -318,7 +305,6 @@ export default function LiveStreamPage() {
 
       if (response.ok) {
         setCommentText('');
-        shouldAutoScrollRef.current = true; // Enable auto-scroll for this update
         fetchComments(); // Refresh comments
       }
     } catch (error) {
@@ -495,7 +481,6 @@ export default function LiveStreamPage() {
                     </div>
                   ))
                 )}
-                <div ref={commentsEndRef} />
               </div>
 
               {/* Comment Input */}
