@@ -302,7 +302,7 @@ export default function HostStreamPage() {
                     <span className="capitalize">{data.stream.status}</span>
                   </div>
                 </div>
-                <div>
+                {/* <div>
                   <div className="text-slate-400 text-sm">Current Viewers</div>
                   <div className="flex items-center gap-2">
                     <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
@@ -312,7 +312,7 @@ export default function HostStreamPage() {
                     <span className="font-semibold text-xl">{simulatedViewerCount.toLocaleString()}</span>
                     <span className="text-slate-400 text-sm">watching</span>
                   </div>
-                </div>
+                </div> */}
                 <div>
                   <div className="text-slate-400 text-sm">Created</div>
                   <div className="font-medium">{new Date(data.stream.createdAt).toLocaleString()}</div>
