@@ -9,6 +9,7 @@ interface ViewerConfig {
   maxViewers: number;
   variationSpeed: number;
   isActive: boolean;
+  commentsActive: boolean;
 }
 
 export default function AdminViewerConfigPage() {
@@ -18,6 +19,7 @@ export default function AdminViewerConfigPage() {
   const [maxViewers, setMaxViewers] = useState(1000000);
   const [variationSpeed, setVariationSpeed] = useState(1000);
   const [isActive, setIsActive] = useState(true);
+  const [commentsActive, setCommentsActive] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -38,6 +40,7 @@ export default function AdminViewerConfigPage() {
         setMaxViewers(data.config.maxViewers);
         setVariationSpeed(data.config.variationSpeed);
         setIsActive(data.config.isActive);
+        setCommentsActive(data.config.commentsActive ?? true);
       }
     } catch (err) {
       console.error('Error fetching config:', err);
@@ -75,6 +78,7 @@ export default function AdminViewerConfigPage() {
           maxViewers,
           variationSpeed,
           isActive,
+          commentsActive,
         }),
       });
 
@@ -155,14 +159,24 @@ export default function AdminViewerConfigPage() {
         {/* Current Stats */}
         <div className="mb-8 bg-slate-800 border border-slate-700 rounded-xl p-6">
           <h2 className="text-xl font-bold mb-4">Current Configuration</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div>
-              <p className="text-slate-400 text-sm">Status</p>
+              <p className="text-slate-400 text-sm">Viewer Status</p>
               <p className="text-2xl font-bold">
                 {config?.isActive ? (
                   <span className="text-green-400">Active</span>
                 ) : (
                   <span className="text-red-400">Paused</span>
+                )}
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-sm">Comments</p>
+              <p className="text-2xl font-bold">
+                {config?.commentsActive ? (
+                  <span className="text-green-400">Active</span>
+                ) : (
+                  <span className="text-orange-400">Paused</span>
                 )}
               </p>
             </div>
@@ -261,27 +275,55 @@ export default function AdminViewerConfigPage() {
               </div>
             </div>
 
-            {/* Active Toggle */}
-            <div className="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
-              <div>
-                <p className="font-medium">Simulation Status</p>
-                <p className="text-sm text-slate-400">
-                  {isActive ? 'Simulation is active' : 'Simulation is paused'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsActive(!isActive)}
-                className={`relative w-16 h-8 rounded-full transition-colors ${
-                  isActive ? 'bg-green-600' : 'bg-slate-600'
-                }`}
-              >
-                <div
-                  className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                    isActive ? 'translate-x-8' : ''
+            {/* Toggles Section */}
+            <div className="space-y-4">
+              {/* Viewer Simulation Toggle */}
+              <div className="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
+                <div>
+                  <p className="font-medium">Viewer Count Simulation</p>
+                  <p className="text-sm text-slate-400">
+                    {isActive ? 'Viewer count simulation is active' : 'Viewer count simulation is paused'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsActive(!isActive)}
+                  className={`relative w-16 h-8 rounded-full transition-colors ${
+                    isActive ? 'bg-green-600' : 'bg-slate-600'
                   }`}
-                />
-              </button>
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                      isActive ? 'translate-x-8' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Comments Simulation Toggle */}
+              <div className="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
+                <div>
+                  <p className="font-medium">Simulated Comments</p>
+                  <p className="text-sm text-slate-400">
+                    {commentsActive 
+                      ? 'Simulated gospel comments are active' 
+                      : 'Simulated comments paused (real user comments still work)'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCommentsActive(!commentsActive)}
+                  className={`relative w-16 h-8 rounded-full transition-colors ${
+                    commentsActive ? 'bg-green-600' : 'bg-orange-600'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                      commentsActive ? 'translate-x-8' : ''
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
 
             {/* Submit Button */}

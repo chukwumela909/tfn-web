@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Comment from '@/models/comment';
+import ViewerConfig from '@/models/viewerConfig';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,9 +18,22 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
 
+    // Check if simulated comments are active
+    const config = await ViewerConfig.findOne({ streamId: 'global' });
+    const commentsActive = config ? config.commentsActive : true;
+
+    // Build query filter
+    const queryFilter: any = { streamId };
+    
+    // If simulated comments are disabled, filter them out (only show real user comments)
+    if (!commentsActive) {
+      // Simulated comments have userId starting with "simulated_"
+      queryFilter.userId = { $not: /^simulated_/ };
+    }
+
     // Fetch the latest 200 comments for this stream
     // Sort by newest first, limit to 200, then reverse for chronological display
-    const comments = await Comment.find({ streamId })
+    const comments = await Comment.find(queryFilter)
       .sort({ createdAt: -1 }) // Descending order (newest first)
       .limit(200) // Get the latest 200 comments
       .lean();
@@ -30,6 +44,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       comments: chronologicalComments,
+      commentsActive, // Let the frontend know if simulated comments are active
     });
   } catch (error) {
     console.error('Error fetching comments:', error);

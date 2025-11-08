@@ -6,6 +6,7 @@ export interface IViewerConfig extends Document {
   maxViewers: number;
   variationSpeed: number; // milliseconds between updates (500-2000ms)
   isActive: boolean;
+  commentsActive: boolean; // Control simulated comments
   updatedAt: Date;
   createdAt: Date;
 }
@@ -36,6 +37,10 @@ const ViewerConfigSchema = new Schema<IViewerConfig>({
     max: 5000,
   },
   isActive: {
+    type: Boolean,
+    default: true,
+  },
+  commentsActive: {
     type: Boolean,
     default: true,
   },

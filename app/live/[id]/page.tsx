@@ -114,16 +114,16 @@ export default function LiveStreamPage() {
       }
     };
 
-    // Generate initial burst of comments (5-8 comments quickly)
-    const initialBurst = Math.floor(Math.random() * 4) + 5;
+    // Generate initial burst of comments (2-3 comments)
+    const initialBurst = Math.floor(Math.random() * 2) + 2;
     for (let i = 0; i < initialBurst; i++) {
-      setTimeout(() => generateSimulatedComment(), i * 200);
+      setTimeout(() => generateSimulatedComment(), i * 3000);
     }
 
-    // Continue generating comments every 0.8 seconds for fast flow
+    // Continue generating comments every 15 seconds
     const commentInterval = setInterval(() => {
       generateSimulatedComment();
-    }, 800); // Every 0.8 seconds for rapid comments
+    }, 15000); // Every 15 seconds for slower, more natural comments
 
     return () => clearInterval(commentInterval);
   }, [streamId]);
@@ -494,22 +494,22 @@ export default function LiveStreamPage() {
                     No comments yet. Be the first to comment!
                   </div>
                 ) : (
-                  <div className="text-center text-slate-500 text-sm py-8">
-                    No comments yet. Be the first to comment!
-                  </div>
-                  // comments.map((comment) => (
-                  //   <div key={comment._id} className="text-sm">
-                  //     <div className="flex items-baseline gap-2">
-                  //       <span className="font-semibold text-blue-400">
-                  //         {comment.username}
-                  //       </span>
-                  //       <span className="text-xs text-slate-500">
-                  //         {new Date(comment.createdAt).toLocaleTimeString()}
-                  //       </span>
-                  //     </div>
-                  //     <p className="text-slate-300 mt-1">{comment.text}</p>
-                  //   </div>
-                  // ))
+                  // <div className="text-center text-slate-500 text-sm py-8">
+                  //   No comments yet. Be the first to comment!
+                  // </div>
+                  comments.map((comment) => (
+                    <div key={comment._id} className="text-sm">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold text-blue-400">
+                          {comment.username}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {new Date(comment.createdAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <p className="text-slate-300 mt-1">{comment.text}</p>
+                    </div>
+                  ))
                 )}
               </div>
 

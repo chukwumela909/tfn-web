@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { streamId = 'global', minViewers, maxViewers, variationSpeed, isActive } = body;
+    const { streamId = 'global', minViewers, maxViewers, variationSpeed, isActive, commentsActive } = body;
 
     // Validation
     if (minViewers !== undefined && minViewers < 0) {
@@ -76,11 +76,12 @@ export async function POST(req: NextRequest) {
         ...(maxViewers !== undefined && { maxViewers }),
         ...(variationSpeed !== undefined && { variationSpeed }),
         ...(isActive !== undefined && { isActive }),
+        ...(commentsActive !== undefined && { commentsActive }),
       },
       { new: true, upsert: true }
     );
 
-    console.log(`✅ Viewer config updated: ${minViewers}-${maxViewers} viewers`);
+    console.log(`✅ Viewer config updated: ${minViewers}-${maxViewers} viewers, Comments: ${commentsActive ? 'Active' : 'Paused'}`);
 
     return NextResponse.json({
       success: true,

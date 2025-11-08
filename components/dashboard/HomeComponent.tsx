@@ -227,16 +227,16 @@ export default function HomeComponent() {
       }
     };
 
-    // Generate initial burst of comments (5-8 comments quickly)
-    const initialBurst = Math.floor(Math.random() * 4) + 5;
+    // Generate initial burst of comments (2-3 comments)
+    const initialBurst = Math.floor(Math.random() * 2) + 2;
     for (let i = 0; i < initialBurst; i++) {
-      setTimeout(() => generateSimulatedComment(), i * 200);
+      setTimeout(() => generateSimulatedComment(), i * 3000);
     }
 
-    // Continue generating comments every 0.8 seconds for fast flow
+    // Continue generating comments every 15 seconds
     const commentInterval = setInterval(() => {
       generateSimulatedComment();
-    }, 800); // Every 0.8 seconds for rapid comments
+    }, 15000); // Every 15 seconds for slower, more natural comments
 
     return () => clearInterval(commentInterval);
   }, [latestStream?.muxStreamId]);
@@ -350,7 +350,7 @@ export default function HomeComponent() {
             </button>
 
             {/* Live Chat Overlay - Left Side */}
-            {/* {showChat && (
+            {showChat && (
               <div className="absolute left-0 top-0 bottom-0 w-80 z-10 flex flex-col ">
 
                 <div className="p-3 border-b border-white/10">
@@ -376,7 +376,7 @@ export default function HomeComponent() {
                   )}
                 </div>
               </div>
-            )} */}
+            )}
 
             {/* Mux Player */}
             <MuxPlayer
