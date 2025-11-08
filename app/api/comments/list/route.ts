@@ -17,15 +17,19 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
 
-    // Fetch comments for this stream, sorted by newest first
+    // Fetch the latest 200 comments for this stream
+    // Sort by newest first, limit to 200, then reverse for chronological display
     const comments = await Comment.find({ streamId })
-      .sort({ createdAt: 1 }) // Ascending order (oldest first, newest at bottom)
-      .limit(200) // Limit to last 200 comments
+      .sort({ createdAt: -1 }) // Descending order (newest first)
+      .limit(200) // Get the latest 200 comments
       .lean();
+
+    // Reverse to show oldest to newest (chronological order for chat display)
+    const chronologicalComments = comments.reverse();
 
     return NextResponse.json({
       success: true,
-      comments,
+      comments: chronologicalComments,
     });
   } catch (error) {
     console.error('Error fetching comments:', error);

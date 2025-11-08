@@ -144,11 +144,11 @@ export default function LiveTVComponent() {
       )}
 
       {/* Refresh Notice */}
-      {streams.length > 0 && (
-        <div className="mt-8 text-center text-sm text-slate-500">
-          Auto-refreshing every 15 seconds • {streams.length} live {streams.length === 1 ? 'stream' : 'streams'}
-        </div>
-      )}
+      {/* {streams.length > 0 && (
+        // <div className="mt-8 text-center text-sm text-slate-500">
+        //   Auto-refreshing every 15 seconds • {streams.length} live {streams.length === 1 ? 'stream' : 'streams'}
+        // </div>
+      )} */}
     </div>
   );
 }
