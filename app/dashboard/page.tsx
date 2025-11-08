@@ -120,7 +120,7 @@ export default function DashboardLayout() {
               onClick={() => router.push('/auth')}
               className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-full text-sm font-medium transition-colors"
             >
-              Sign In
+              Sign in
             </button>
           )}
           
