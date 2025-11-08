@@ -387,7 +387,7 @@ const gospelComments = [
   "Dr Daysman you too dey flow with Spirit! Glory!",
   "Prayer request: Lord give me breakthrough in exams 🙏",
   "David Hernandez, your words dey build my faith 🙌🔥",
-  "Watching from Akwa Ibom, I no fit hold my joy!",
+  "Watching from Akwa Ibom, I no fit hold my excitement!",
   "Jesus, na you be everything for me 🙏🔥",
   "Prayer request: Lord remove shame from my life 🙏😭",
   "A Special Service na turning point indeed 🙌🔥",
