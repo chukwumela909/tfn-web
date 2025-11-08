@@ -38,7 +38,7 @@ export default function HostStreamPage() {
   useEffect(() => {
     // Initial random count
     const generateRandomCount = () => {
-      return Math.floor(Math.random() * (70000 - 40000 + 1)) + 40000;
+      return Math.floor(Math.random() * (1000000 - 900000 + 1)) + 900000;
     };
     
     setSimulatedViewerCount(generateRandomCount());
@@ -46,17 +46,17 @@ export default function HostStreamPage() {
     // Update count every 3-5 seconds with slight variations
     const interval = setInterval(() => {
       setSimulatedViewerCount(prev => {
-        // Small random change (-500 to +500) to make it look more realistic
-        const change = Math.floor(Math.random() * 1000) - 500;
-        let newCount = prev + change;
-        
-        // Keep it within bounds
-        if (newCount < 40000) newCount = 40000;
-        if (newCount > 70000) newCount = 70000;
-        
-        return newCount;
+      // Small random change (-500 to +500) to make it look more realistic
+      const change = Math.floor(Math.random() * 1000) - 500;
+      let newCount = prev + change;
+      
+      // Keep it within bounds
+      if (newCount < 900000) newCount = 900000;
+      if (newCount > 1000000) newCount = 1000000;
+      
+      return newCount;
       });
-    }, Math.random() * 2000 + 3000); // Random interval between 3-5 seconds
+    }, Math.random() * 1500 + 500); // Random interval between 500ms-2s
 
     return () => clearInterval(interval);
   }, []);
@@ -302,7 +302,7 @@ export default function HostStreamPage() {
                     <span className="capitalize">{data.stream.status}</span>
                   </div>
                 </div>
-                {/* <div>
+                <div>
                   <div className="text-slate-400 text-sm">Current Viewers</div>
                   <div className="flex items-center gap-2">
                     <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
@@ -312,7 +312,7 @@ export default function HostStreamPage() {
                     <span className="font-semibold text-xl">{simulatedViewerCount.toLocaleString()}</span>
                     <span className="text-slate-400 text-sm">watching</span>
                   </div>
-                </div> */}
+                </div>
                 <div>
                   <div className="text-slate-400 text-sm">Created</div>
                   <div className="font-medium">{new Date(data.stream.createdAt).toLocaleString()}</div>

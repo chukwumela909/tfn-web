@@ -43,31 +43,31 @@ export default function LiveStreamPage() {
   const [simulatedViewerCount, setSimulatedViewerCount] = useState(0);
 
   // Generate random viewer count between 40,000 and 70,000
-  useEffect(() => {
-    // Initial random count
-    const generateRandomCount = () => {
-      return Math.floor(Math.random() * (70000 - 40000 + 1)) + 40000;
-    };
-    
-    setSimulatedViewerCount(generateRandomCount());
-
-    // Update count every 3-5 seconds with slight variations
-    const interval = setInterval(() => {
-      setSimulatedViewerCount(prev => {
-        // Small random change (-500 to +500) to make it look more realistic
-        const change = Math.floor(Math.random() * 1000) - 500;
-        let newCount = prev + change;
-        
-        // Keep it within bounds
-        if (newCount < 40000) newCount = 40000;
-        if (newCount > 70000) newCount = 70000;
-        
-        return newCount;
-      });
-    }, Math.random() * 2000 + 3000); // Random interval between 3-5 seconds
-
-    return () => clearInterval(interval);
-  }, []);
+   useEffect(() => {
+     // Initial random count
+     const generateRandomCount = () => {
+       return Math.floor(Math.random() * (1000000 - 900000 + 1)) + 900000;
+     };
+     
+     setSimulatedViewerCount(generateRandomCount());
+ 
+     // Update count every 3-5 seconds with slight variations
+     const interval = setInterval(() => {
+       setSimulatedViewerCount(prev => {
+       // Small random change (-500 to +500) to make it look more realistic
+       const change = Math.floor(Math.random() * 1000) - 500;
+       let newCount = prev + change;
+       
+       // Keep it within bounds
+       if (newCount < 900000) newCount = 900000;
+       if (newCount > 1000000) newCount = 1000000;
+       
+       return newCount;
+       });
+     }, Math.random() * 1500 + 500); // Random interval between 500ms-2s
+ 
+     return () => clearInterval(interval);
+   }, []);
 
   // Server-side simulated comments - Generate comments on server every 0.8 seconds
   useEffect(() => {
@@ -416,15 +416,15 @@ export default function LiveStreamPage() {
               <h1 className="text-2xl font-bold mb-4">{streamInfo.title}</h1>
               
               <div className="space-y-3">
-                {/* <div className="flex items-center gap-3 text-slate-300">
+                <div className="flex items-center gap-3 text-slate-300">
                   <User className="w-5 h-5 text-slate-400" />
                   <div>
                     <div className="text-xs text-slate-500">Streamer</div>
                     <div className="font-medium">Channel</div>
                   </div>
-                </div> */}
+                </div>
 
-                {/* <div className="flex items-center gap-3 text-slate-300">
+                <div className="flex items-center gap-3 text-slate-300">
                   <Eye className="w-5 h-5 text-slate-400" />
                   <div>
                     <div className="text-xs text-slate-500">Viewers</div>
@@ -432,7 +432,7 @@ export default function LiveStreamPage() {
                       {simulatedViewerCount.toLocaleString()} watching
                     </div>
                   </div>
-                </div> */}
+                </div>
 
                 <div className="pt-3 border-t border-slate-700">
                   <div className="text-xs text-slate-500 mb-1">Started</div>
