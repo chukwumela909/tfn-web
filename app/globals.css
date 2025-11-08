@@ -166,3 +166,14 @@
     font-family: var(--font-lato), system-ui, -apple-system, sans-serif;
   }
 }
+
+/* Hide scrollbar */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}

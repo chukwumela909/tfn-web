@@ -150,6 +150,22 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
+    // Clean up old comments to prevent database bloat
+    // Keep only the latest 500 comments per stream
+    const commentCount = await Comment.countDocuments({ streamId });
+    if (commentCount > 500) {
+      // Get the oldest comments to delete
+      const commentsToDelete = await Comment.find({ streamId })
+        .sort({ createdAt: 1 }) // Oldest first
+        .limit(commentCount - 500) // Delete excess comments
+        .select('_id')
+        .lean();
+      
+      const idsToDelete = commentsToDelete.map(c => c._id);
+      await Comment.deleteMany({ _id: { $in: idsToDelete } });
+      console.log(`🗑️ Cleaned up ${idsToDelete.length} old comments for stream ${streamId}`);
+    }
+
     // Generate random comment and username
     const randomComment = gospelComments[Math.floor(Math.random() * gospelComments.length)];
     
