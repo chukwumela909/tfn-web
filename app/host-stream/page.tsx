@@ -33,33 +33,61 @@ export default function HostStreamPage() {
   const [viewerCount, setViewerCount] = useState(0);
   const [viewerId, setViewerId] = useState<string>('');
   const [simulatedViewerCount, setSimulatedViewerCount] = useState(0);
+  const [viewerConfig, setViewerConfig] = useState({ min: 900000, max: 1000000, speed: 1000, active: true });
 
-  // Generate random viewer count between 40,000 and 70,000
+  // Fetch viewer config from API
   useEffect(() => {
+    const fetchViewerConfig = async () => {
+      try {
+        const response = await fetch('/api/admin/viewer-config?streamId=global');
+        if (response.ok) {
+          const data = await response.json();
+          setViewerConfig({
+            min: data.config.minViewers,
+            max: data.config.maxViewers,
+            speed: data.config.variationSpeed,
+            active: data.config.isActive,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching viewer config:', error);
+      }
+    };
+
+    fetchViewerConfig();
+    // Poll for config updates every 5 seconds
+    const interval = setInterval(fetchViewerConfig, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Generate random viewer count based on dynamic config
+  useEffect(() => {
+    if (!viewerConfig.active) return;
+
     // Initial random count
     const generateRandomCount = () => {
-      return Math.floor(Math.random() * (1000000 - 900000 + 1)) + 900000;
+      return Math.floor(Math.random() * (viewerConfig.max - viewerConfig.min + 1)) + viewerConfig.min;
     };
     
     setSimulatedViewerCount(generateRandomCount());
 
-    // Update count every 3-5 seconds with slight variations
+    // Update count based on config speed
     const interval = setInterval(() => {
       setSimulatedViewerCount(prev => {
-      // Small random change (-500 to +500) to make it look more realistic
-      const change = Math.floor(Math.random() * 1000) - 500;
-      let newCount = prev + change;
-      
-      // Keep it within bounds
-      if (newCount < 900000) newCount = 900000;
-      if (newCount > 1000000) newCount = 1000000;
-      
-      return newCount;
+        // Small random change (-500 to +500) to make it look more realistic
+        const change = Math.floor(Math.random() * 1000) - 500;
+        let newCount = prev + change;
+        
+        // Keep it within bounds from config
+        if (newCount < viewerConfig.min) newCount = viewerConfig.min;
+        if (newCount > viewerConfig.max) newCount = viewerConfig.max;
+        
+        return newCount;
       });
-    }, Math.random() * 1500 + 500); // Random interval between 500ms-2s
+    }, viewerConfig.speed);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [viewerConfig]);
 
   // Generate unique viewer ID for the host
   useEffect(() => {

@@ -41,33 +41,61 @@ export default function LiveStreamPage() {
   const [commentText, setCommentText] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
   const [simulatedViewerCount, setSimulatedViewerCount] = useState(0);
+  const [viewerConfig, setViewerConfig] = useState({ min: 900000, max: 1000000, speed: 1000, active: true });
 
-  // Generate random viewer count between 40,000 and 70,000
-   useEffect(() => {
-     // Initial random count
-     const generateRandomCount = () => {
-       return Math.floor(Math.random() * (1000000 - 900000 + 1)) + 900000;
-     };
-     
-     setSimulatedViewerCount(generateRandomCount());
- 
-     // Update count every 3-5 seconds with slight variations
-     const interval = setInterval(() => {
-       setSimulatedViewerCount(prev => {
-       // Small random change (-500 to +500) to make it look more realistic
-       const change = Math.floor(Math.random() * 1000) - 500;
-       let newCount = prev + change;
-       
-       // Keep it within bounds
-       if (newCount < 900000) newCount = 900000;
-       if (newCount > 1000000) newCount = 1000000;
-       
-       return newCount;
-       });
-     }, Math.random() * 1500 + 500); // Random interval between 500ms-2s
- 
-     return () => clearInterval(interval);
-   }, []);
+  // Fetch viewer config from API
+  useEffect(() => {
+    const fetchViewerConfig = async () => {
+      try {
+        const response = await fetch('/api/admin/viewer-config?streamId=global');
+        if (response.ok) {
+          const data = await response.json();
+          setViewerConfig({
+            min: data.config.minViewers,
+            max: data.config.maxViewers,
+            speed: data.config.variationSpeed,
+            active: data.config.isActive,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching viewer config:', error);
+      }
+    };
+
+    fetchViewerConfig();
+    // Poll for config updates every 5 seconds
+    const interval = setInterval(fetchViewerConfig, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Generate random viewer count based on dynamic config
+  useEffect(() => {
+    if (!viewerConfig.active) return;
+
+    // Initial random count
+    const generateRandomCount = () => {
+      return Math.floor(Math.random() * (viewerConfig.max - viewerConfig.min + 1)) + viewerConfig.min;
+    };
+
+    setSimulatedViewerCount(generateRandomCount());
+
+    // Update count based on config speed
+    const interval = setInterval(() => {
+      setSimulatedViewerCount(prev => {
+        // Small random change (-500 to +500) to make it look more realistic
+        const change = Math.floor(Math.random() * 1000) - 500;
+        let newCount = prev + change;
+
+        // Keep it within bounds from config
+        if (newCount < viewerConfig.min) newCount = viewerConfig.min;
+        if (newCount > viewerConfig.max) newCount = viewerConfig.max;
+
+        return newCount;
+      });
+    }, viewerConfig.speed);
+
+    return () => clearInterval(interval);
+  }, [viewerConfig]);
 
   // Server-side simulated comments - Generate comments on server every 0.8 seconds
   useEffect(() => {
@@ -111,7 +139,7 @@ export default function LiveStreamPage() {
 
     // Get username - prioritize channel_name for signed-in users
     const channelName = localStorage.getItem('channel_name');
-    
+
     if (channelName && channelName !== 'null' && channelName !== 'undefined') {
       // Use signed-in user's channel name
       setUsername(channelName);
@@ -148,7 +176,7 @@ export default function LiveStreamPage() {
 
     // Leave site when page unloads
     const handleBeforeUnload = () => {
-      navigator.sendBeacon('/api/streams/view/leave', 
+      navigator.sendBeacon('/api/streams/view/leave',
         JSON.stringify({ muxStreamId: 'site_visitors', viewerId })
       );
     };
@@ -236,7 +264,7 @@ export default function LiveStreamPage() {
     try {
       const response = await fetch(`/api/streams/get?muxStreamId=${streamId}`);
       if (!response.ok) throw new Error('Stream not found');
-      
+
       const data = await response.json();
       console.log('Fetched stream data:', data);
       setStreamInfo(data.stream);
@@ -252,13 +280,13 @@ export default function LiveStreamPage() {
   // Fetch comments
   const fetchComments = async () => {
     if (!streamId) return;
-    
+
     try {
       const response = await fetch(`/api/comments/list?streamId=${streamId}`);
       if (response.ok) {
         const data = await response.json();
         const newComments = data.comments;
-        
+
         setComments(newComments);
       }
     } catch (error) {
@@ -269,27 +297,27 @@ export default function LiveStreamPage() {
   // Poll for new comments every 1.5 seconds for fast updates
   useEffect(() => {
     if (!streamId) return;
-    
+
     fetchComments();
     const interval = setInterval(fetchComments, 1500); // Poll every 1.5 seconds
-    
+
     return () => clearInterval(interval);
   }, [streamId]);
 
   // Send comment
   const handleSendComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!commentText.trim() || !viewerId || sendingComment) return;
-    
+
     // Strictly get the latest channel_name for authenticated users
     const channelName = localStorage.getItem('channel_name');
-    const finalUsername = (channelName && channelName !== 'null' && channelName !== 'undefined') 
-      ? channelName 
+    const finalUsername = (channelName && channelName !== 'null' && channelName !== 'undefined')
+      ? channelName
       : username;
-    
+
     if (!finalUsername) return; // Don't send if no username available
-    
+
     setSendingComment(true);
     try {
       const response = await fetch('/api/comments/create', {
@@ -414,7 +442,7 @@ export default function LiveStreamPage() {
             {/* Stream Details Card */}
             <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6">
               <h1 className="text-2xl font-bold mb-4">{streamInfo.title}</h1>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-slate-300">
                   <User className="w-5 h-5 text-slate-400" />
@@ -444,11 +472,10 @@ export default function LiveStreamPage() {
                 <div>
                   <div className="text-xs text-slate-500 mb-1">Status</div>
                   <div className="text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      isLive 
-                        ? 'bg-red-600 text-white' 
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${isLive
+                        ? 'bg-red-600 text-white'
                         : 'bg-yellow-600 text-white'
-                    }`}>
+                      }`}>
                       {isLive ? 'LIVE' : 'OFFLINE'}
                     </span>
                   </div>
@@ -459,27 +486,30 @@ export default function LiveStreamPage() {
             {/* Comments Section */}
             <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
               <h2 className="text-lg font-semibold mb-3">Live Chat</h2>
-              
-              {/* Comments List - Scrollable */}
+
+
               <div className="h-[500px] overflow-y-auto mb-3 space-y-2 bg-slate-900/50 rounded-lg p-3 scroll-smooth">
                 {comments.length === 0 ? (
                   <div className="text-center text-slate-500 text-sm py-8">
                     No comments yet. Be the first to comment!
                   </div>
                 ) : (
-                  comments.map((comment) => (
-                    <div key={comment._id} className="text-sm">
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-semibold text-blue-400">
-                          {comment.username}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          {new Date(comment.createdAt).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <p className="text-slate-300 mt-1">{comment.text}</p>
-                    </div>
-                  ))
+                  <div className="text-center text-slate-500 text-sm py-8">
+                    No comments yet. Be the first to comment!
+                  </div>
+                  // comments.map((comment) => (
+                  //   <div key={comment._id} className="text-sm">
+                  //     <div className="flex items-baseline gap-2">
+                  //       <span className="font-semibold text-blue-400">
+                  //         {comment.username}
+                  //       </span>
+                  //       <span className="text-xs text-slate-500">
+                  //         {new Date(comment.createdAt).toLocaleTimeString()}
+                  //       </span>
+                  //     </div>
+                  //     <p className="text-slate-300 mt-1">{comment.text}</p>
+                  //   </div>
+                  // ))
                 )}
               </div>
 
@@ -523,9 +553,9 @@ export default function LiveStreamPage() {
         </div>
 
         {/* Auto-refresh Notice */}
-        <div className="mt-8 text-center text-sm text-slate-500">
+        {/* <div className="mt-8 text-center text-sm text-slate-500">
           Auto-refreshing stream status every 10 seconds
-        </div>
+        </div> */}
       </main>
     </div>
   );
