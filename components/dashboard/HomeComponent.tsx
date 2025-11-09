@@ -318,7 +318,7 @@ export default function HomeComponent() {
           </div>
           <div className="relative w-full aspect-video bg-slate-900 rounded-lg overflow-hidden">
             {/* Chat Toggle Button */}
-            <button
+            {/* <button
               onClick={() => setShowChat(!showChat)}
               className="absolute top-4 right-4 z-20 bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white p-2 rounded-lg transition-all duration-200"
               title={showChat ? "Hide chat" : "Show chat"}
@@ -347,10 +347,10 @@ export default function HomeComponent() {
                   />
                 )}
               </svg>
-            </button>
+            </button> */}
 
             {/* Live Chat Overlay - Left Side */}
-            {showChat && (
+            {/* {showChat && (
               <div className="absolute left-0 top-0 bottom-0 w-80 z-10 flex flex-col ">
 
                 <div className="p-3 border-b border-white/10">
@@ -376,7 +376,7 @@ export default function HomeComponent() {
                   )}
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Mux Player */}
             <MuxPlayer
