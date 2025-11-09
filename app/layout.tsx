@@ -20,7 +20,7 @@ const lato = Lato({
 });
 
 export const metadata: Metadata = {
-  title: "This Fellowship Network",
+  title: "The Fellowship Network",
   description: "A platform for livestreaming and gospel engagement",
 };
 

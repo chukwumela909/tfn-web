@@ -363,10 +363,10 @@ export default function HomeComponent() {
                     comments.map((comment) => (
                       <div key={comment._id} className="text-xs">
                         <div className="flex items-baseline gap-2">
-                          <span className="font-semibold text-blue-400 text-lg">{comment.username}</span>
+                          <span className="font-semibold text-blue-400 text-sm">{comment.username}</span>
                           <span className="text-white/50">{formatTime(comment.createdAt)}</span>
                         </div>
-                        <p className="text-white/90 mt-0.5 text-lg">{comment.text}</p>
+                        <p className="text-white/90 mt-0.5 text-sm">{comment.text}</p>
                       </div>
                     ))
                   ) : (
