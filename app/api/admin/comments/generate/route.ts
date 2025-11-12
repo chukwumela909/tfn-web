@@ -6,13 +6,48 @@ import mongoose from 'mongoose';
 
 // Nigerian names for usernames
 const nigerianNames = [
+  // Nigerian Names
   'Chinedu', 'Ngozi Okafor', 'Oluwaseun', 'Adaeze Nwankwo', 'Emeka', 'Chioma Eze', 'Tunde', 'Blessing',
   'Ibrahim Yusuf', 'Fatima', 'Chiamaka', 'Chukwudi Okeke', 'Adeola', 'Funke Adeyemi', 'Segun', 'Bisi',
   'Uche', 'Amaka Obi', 'Kazeem', 'Aminat', 'Obinna Chukwu', 'Ifeoma', 'Yusuf', 'Hauwa Mohammed',
   'Ifeanyi', 'Nkechi Ogbu', 'Babatunde', 'Kemi', 'Chidi Ike', 'Nneka', 'Musa', 'Zainab Hassan',
   'Ikechukwu Nnamdi', 'Chinenye', 'Oluwatoyin', 'Titilayo Bello', 'Chukwuemeka', 'Obiageli',
-  'Mark Johnson', 'Sarah', 'David Chen', 'Grace', 'John Williams', 'Mary', 'Peter', 'Ruth Kamau', 'Paul Rodriguez', 'Esther',
-  'Michael', 'Jennifer Brown', 'James', 'Linda Okoro', 'Daniel', 'Patricia Garcia', 'Joseph', 'Elizabeth Mensah'
+  'Onyeka', 'Ebere Okorie', 'Uzoma', 'Adanna', 'Olamide', 'Folake Williams', 'Taiwo', 'Kehinde',
+  'Abubakar Sani', 'Aisha', 'Chinonso', 'Uchenna Nwosu', 'Bolaji', 'Temitope Alabi', 'Gbenga', 'Yetunde',
+  'Nnamdi', 'Adaora Ibe', 'Chibueze', 'Ijeoma Nduka', 'Femi', 'Ronke Adeleke', 'Tobi', 'Kelechi',
+  'Chukwuma', 'Nnenna Okoli', 'Adewale', 'Bukola Ajayi', 'Kunle', 'Damilola Ogun', 'Chima', 'Ugochi',
+  'Ikenna', 'Amarachi Onu', 'Osas', 'Eghosa Edozie', 'Ejike', 'Ngozika Mbah', 'Abdullahi', 'Halima',
+  'Chukwudi', 'Chidinma Nkem', 'Fola', 'Bisola Johnson', 'Dele', 'Mojisola', 'Chinedum', 'Ebuka',
+  'Oluchi', 'Chiamaka Eze', 'Dayo', 'Sade Okonkwo', 'Wale', 'Funmilayo', 'Jide', 'Titi Ibrahim',
+  'Nonso', 'Chisom Agu', 'Rotimi', 'Bukky Ahmed', 'Niyi', 'Yemi Hassan', 'Olusegun', 'Dolapo',
+  'Chibuzor', 'Amara Udo', 'Ayodele', 'Modupe Balogun', 'Kayode', 'Omotola', 'Chigozie', 'Uju Okafor',
+  'Olumide', 'Bimpe Adewumi', 'Seyi', 'Tolani', 'Ebenezer', 'Esosa Aigbe', 'Ola', 'Shade Lawal',
+  'Somto', 'Adaugo Nnamani', 'Kola', 'Jumoke Peters', 'Chukwuka', 'Kosisochukwu', 'Akpan', 'Ima Edet',
+  'Tochukwu', 'Chidera Azubuike', 'Akeem', 'Mariam Bello', 'Dubem', 'Chinenye Onu', 'Ganiyu', 'Khadija',
+  'Chijioke', 'Chizoba Okonkwo', 'Dare', 'Nike Ogunyemi', 'Ezekiel', 'Mercy Bassey', 'Festus', 'Joy',
+  'Godspower', 'Faith Okpara', 'Henry', 'Victoria Adamu', 'Ikechukwu', 'Precious Udoh', 'Kelvin', 'Angela',
+  'Lekan', 'Omolara', 'Makinde', 'Nafisat', 'Nnamdi', 'Chinenye Nwachukwu', 'Ojo', 'Peju Oyewole',
+  
+  // International Names
+  'Mark Johnson', 'Sarah', 'David Chen', 'Grace', 'John Williams', 'Mary', 'Peter', 'Ruth Kamau', 
+  'Paul Rodriguez', 'Esther', 'Michael', 'Jennifer Brown', 'James', 'Linda Okoro', 'Daniel', 
+  'Patricia Garcia', 'Joseph', 'Elizabeth Mensah', 'Matthew Lee', 'Rebecca', 'Samuel Kim', 'Hannah',
+  'Andrew Smith', 'Deborah', 'Stephen', 'Rachel Martinez', 'Timothy', 'Lydia Osei', 'Benjamin Davis',
+  'Priscilla', 'Joshua', 'Abigail Wilson', 'Isaac', 'Naomi Anderson', 'Jacob', 'Ruth Mwangi',
+  'Nathan', 'Miriam Thomas', 'Caleb Jackson', 'Anna', 'Elijah', 'Martha White', 'Luke', 'Sarah Lopez',
+  'Simon', 'Mary Adjei', 'Philip', 'Joanna Harris', 'Thomas', 'Susanna Clark', 'Aaron', 'Eunice',
+  'Moses', 'Dorcas Lewis', 'Solomon', 'Tabitha Robinson', 'Emmanuel', 'Phoebe Walker', 'Joel', 'Julia',
+  'Ezra', 'Salome Hall', 'Nehemiah', 'Rhoda Allen', 'Jonah', 'Magdalene Young', 'Micah', 'Chloe',
+  'Malachi', 'Zoe Hernandez', 'Elisha', 'Eve King', 'Gideon', 'Leah Wright', 'Silas', 'Dinah',
+  'Barnabas', 'Martha Lopez', 'Titus', 'Kezia Moore', 'Philemon', 'Huldah Martin', 'Jude', 'Orpah',
+  'Abel', 'Delilah Jackson', 'Seth', 'Bathsheba', 'Enoch', 'Abigail Taylor', 'Noah', 'Rebekah',
+  'Abraham', 'Zilpah Anderson', 'Hosea', 'Jemima Thomas', 'Amos', 'Sapphira', 'Obadiah', 'Priscilla Lee',
+  'Habakkuk', 'Claudia Martinez', 'Zephaniah', 'Candace', 'Haggai', 'Persis White', 'Zechariah', 'Tryphena',
+  'Asher', 'Euodia Brown', 'Levi', 'Syntyche', 'Reuben', 'Lois Harris', 'Simeon', 'Eunice Clark',
+  'Judah', 'Damaris', 'Naphtali', 'Drusilla Walker', 'Gad', 'Bernice Robinson', 'Dan', 'Lydia Hall',
+  'Zebulun', 'Tabitha Allen', 'Issachar', 'Rhoda Young', 'Manasseh', 'Apphia', 'Ephraim', 'Nympha',
+  'Boaz', 'Chloe Hernandez', 'Obed', 'Junia King', 'Jesse', 'Phoebe Wright', 'Saul', 'Julia Martin',
+  'Korah', 'Olympas', 'Lamech', 'Persis Moore', 'Melchizedek', 'Tryphosa', 'Methuselah', 'Quartus'
 ];
 
 const stylePrompts = {
@@ -26,10 +61,10 @@ const stylePrompts = {
 - "My breakthrough is here in Jesus name! "
 - "Thank you Lord for answered prayers! "`,
   
-  prayer: `Generate prayer request comments for a Christian livestream. Include emojis like 🙏, 😭. Examples:
-- "Lord bless my family 🙏"
-- "Prayer request: God help me overcome 🙏😭"
-- "Father heal my mother 🙏"`,
+  prayer: `Generate prayer request comments for a Christian livestream:
+- "Lord bless my family "
+- "Prayer request: God help me overcome "
+- "Father heal my mother "`,
   
   interactive: `Generate interactive location-based comments for a Christian livestream. Include country flags and emojis. Examples:
 - "Amen! Watching from Lagos! 🇳🇬"
@@ -90,7 +125,6 @@ Generate ${batchSize} unique, diverse comments. ${styleInstructions}
 
 IMPORTANT RULES:
 1. Each comment must be SHORT (5-15 words maximum)
-3. Include appropriate emojis sometimes
 4. Make them feel authentic and spontaneous
 5. Vary the enthusiasm level
 
