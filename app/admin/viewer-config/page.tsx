@@ -132,12 +132,20 @@ export default function AdminViewerConfigPage() {
             <h1 className="text-2xl font-bold">Admin: Viewer Count Control</h1>
             <p className="text-slate-400 text-sm mt-1">Manage simulated viewer counts in real-time</p>
           </div>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
-          >
-            Back to Dashboard
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push('/admin/ai-comments')}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors font-medium"
+            >
+              🤖 AI Comments
+            </button>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       </header>
 

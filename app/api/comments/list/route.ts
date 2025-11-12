@@ -26,8 +26,9 @@ export async function GET(req: NextRequest) {
     const queryFilter: any = { streamId };
     
     // If simulated comments are disabled, filter them out (only show real user comments)
+    // Note: AI-generated comments (ai_generated_*) are ALWAYS shown regardless of commentsActive
     if (!commentsActive) {
-      // Simulated comments have userId starting with "simulated_"
+      // Filter out ONLY simulated comments (simulated_*), keep AI-generated (ai_generated_*) and real users
       queryFilter.userId = { $not: /^simulated_/ };
     }
 
