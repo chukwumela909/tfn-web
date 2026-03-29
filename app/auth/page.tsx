@@ -369,7 +369,7 @@ export default function AuthPage() {
                     </div>
                   )}
 
-                  {error && (
+                  {success && (
                     <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
                       <p className="text-green-400 text-sm text-center">{success}</p>
                     </div>
