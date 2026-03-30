@@ -48,7 +48,7 @@ export default function ProfileComponent() {
 
       const response = await ApiService.getUserData(token);
       
-      if (response.success || response.channelName) {
+      if (response.success || response.channelName || response.user) {
         const userData: UserData = {
           channelName: response.channelName || response.user?.channelName || 'TFN',
           email: response.email || response.user?.email || 'greg@gmail.com',
