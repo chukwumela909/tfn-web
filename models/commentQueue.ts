@@ -5,14 +5,12 @@ export interface ICommentQueue extends Document {
     _id: mongoose.Types.ObjectId;
     username: string;
     text: string;
-    style: string;
   }[];
   streamId: string;
   status: 'pending' | 'approved' | 'posted';
   generatedAt: Date;
   customPrompt?: string;
   batchSize: number;
-  styles: string[];
 }
 
 const CommentQueueSchema = new Schema({
@@ -20,7 +18,6 @@ const CommentQueueSchema = new Schema({
     {
       username: { type: String, required: true },
       text: { type: String, required: true },
-      style: { type: String, required: true },
     },
   ],
   streamId: { type: String, required: true },
@@ -32,7 +29,6 @@ const CommentQueueSchema = new Schema({
   generatedAt: { type: Date, default: Date.now },
   customPrompt: { type: String },
   batchSize: { type: Number, required: true },
-  styles: [{ type: String }],
 });
 
 export default mongoose.models.CommentQueue ||

@@ -7,6 +7,7 @@ export interface IViewerConfig extends Document {
   variationSpeed: number; // milliseconds between updates (500-2000ms)
   isActive: boolean;
   commentsActive: boolean; // Control simulated comments
+  programContext: string; // Persistent program background fed into AI comment generation
   updatedAt: Date;
   createdAt: Date;
 }
@@ -43,6 +44,10 @@ const ViewerConfigSchema = new Schema<IViewerConfig>({
   commentsActive: {
     type: Boolean,
     default: true,
+  },
+  programContext: {
+    type: String,
+    default: '',
   },
 }, {
   timestamps: true,

@@ -2,88 +2,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import CommentQueue from '@/models/commentQueue';
+import ViewerConfig from '@/models/viewerConfig';
 import mongoose from 'mongoose';
-
-// Nigerian names for usernames
-const nigerianNames = [
-  // Nigerian Names
-  'Chinedu', 'Ngozi Okafor', 'Oluwaseun', 'Adaeze Nwankwo', 'Emeka', 'Chioma Eze', 'Tunde', 'Blessing',
-  'Ibrahim Yusuf', 'Fatima', 'Chiamaka', 'Chukwudi Okeke', 'Adeola', 'Funke Adeyemi', 'Segun', 'Bisi',
-  'Uche', 'Amaka Obi', 'Kazeem', 'Aminat', 'Obinna Chukwu', 'Ifeoma', 'Yusuf', 'Hauwa Mohammed',
-  'Ifeanyi', 'Nkechi Ogbu', 'Babatunde', 'Kemi', 'Chidi Ike', 'Nneka', 'Musa', 'Zainab Hassan',
-  'Ikechukwu Nnamdi', 'Chinenye', 'Oluwatoyin', 'Titilayo Bello', 'Chukwuemeka', 'Obiageli',
-  'Onyeka', 'Ebere Okorie', 'Uzoma', 'Adanna', 'Olamide', 'Folake Williams', 'Taiwo', 'Kehinde',
-  'Abubakar Sani', 'Aisha', 'Chinonso', 'Uchenna Nwosu', 'Bolaji', 'Temitope Alabi', 'Gbenga', 'Yetunde',
-  'Nnamdi', 'Adaora Ibe', 'Chibueze', 'Ijeoma Nduka', 'Femi', 'Ronke Adeleke', 'Tobi', 'Kelechi',
-  'Chukwuma', 'Nnenna Okoli', 'Adewale', 'Bukola Ajayi', 'Kunle', 'Damilola Ogun', 'Chima', 'Ugochi',
-  'Ikenna', 'Amarachi Onu', 'Osas', 'Eghosa Edozie', 'Ejike', 'Ngozika Mbah', 'Abdullahi', 'Halima',
-  'Chukwudi', 'Chidinma Nkem', 'Fola', 'Bisola Johnson', 'Dele', 'Mojisola', 'Chinedum', 'Ebuka',
-  'Oluchi', 'Chiamaka Eze', 'Dayo', 'Sade Okonkwo', 'Wale', 'Funmilayo', 'Jide', 'Titi Ibrahim',
-  'Nonso', 'Chisom Agu', 'Rotimi', 'Bukky Ahmed', 'Niyi', 'Yemi Hassan', 'Olusegun', 'Dolapo',
-  'Chibuzor', 'Amara Udo', 'Ayodele', 'Modupe Balogun', 'Kayode', 'Omotola', 'Chigozie', 'Uju Okafor',
-  'Olumide', 'Bimpe Adewumi', 'Seyi', 'Tolani', 'Ebenezer', 'Esosa Aigbe', 'Ola', 'Shade Lawal',
-  'Somto', 'Adaugo Nnamani', 'Kola', 'Jumoke Peters', 'Chukwuka', 'Kosisochukwu', 'Akpan', 'Ima Edet',
-  'Tochukwu', 'Chidera Azubuike', 'Akeem', 'Mariam Bello', 'Dubem', 'Chinenye Onu', 'Ganiyu', 'Khadija',
-  'Chijioke', 'Chizoba Okonkwo', 'Dare', 'Nike Ogunyemi', 'Ezekiel', 'Mercy Bassey', 'Festus', 'Joy',
-  'Godspower', 'Faith Okpara', 'Henry', 'Victoria Adamu', 'Ikechukwu', 'Precious Udoh', 'Kelvin', 'Angela',
-  'Lekan', 'Omolara', 'Makinde', 'Nafisat', 'Nnamdi', 'Chinenye Nwachukwu', 'Ojo', 'Peju Oyewole',
-  
-  // International Names
-  'Mark Johnson', 'Sarah', 'David Chen', 'Grace', 'John Williams', 'Mary', 'Peter', 'Ruth Kamau', 
-  'Paul Rodriguez', 'Esther', 'Michael', 'Jennifer Brown', 'James', 'Linda Okoro', 'Daniel', 
-  'Patricia Garcia', 'Joseph', 'Elizabeth Mensah', 'Matthew Lee', 'Rebecca', 'Samuel Kim', 'Hannah',
-  'Andrew Smith', 'Deborah', 'Stephen', 'Rachel Martinez', 'Timothy', 'Lydia Osei', 'Benjamin Davis',
-  'Priscilla', 'Joshua', 'Abigail Wilson', 'Isaac', 'Naomi Anderson', 'Jacob', 'Ruth Mwangi',
-  'Nathan', 'Miriam Thomas', 'Caleb Jackson', 'Anna', 'Elijah', 'Martha White', 'Luke', 'Sarah Lopez',
-  'Simon', 'Mary Adjei', 'Philip', 'Joanna Harris', 'Thomas', 'Susanna Clark', 'Aaron', 'Eunice',
-  'Moses', 'Dorcas Lewis', 'Solomon', 'Tabitha Robinson', 'Emmanuel', 'Phoebe Walker', 'Joel', 'Julia',
-  'Ezra', 'Salome Hall', 'Nehemiah', 'Rhoda Allen', 'Jonah', 'Magdalene Young', 'Micah', 'Chloe',
-  'Malachi', 'Zoe Hernandez', 'Elisha', 'Eve King', 'Gideon', 'Leah Wright', 'Silas', 'Dinah',
-  'Barnabas', 'Martha Lopez', 'Titus', 'Kezia Moore', 'Philemon', 'Huldah Martin', 'Jude', 'Orpah',
-  'Abel', 'Delilah Jackson', 'Seth', 'Bathsheba', 'Enoch', 'Abigail Taylor', 'Noah', 'Rebekah',
-  'Abraham', 'Zilpah Anderson', 'Hosea', 'Jemima Thomas', 'Amos', 'Sapphira', 'Obadiah', 'Priscilla Lee',
-  'Habakkuk', 'Claudia Martinez', 'Zephaniah', 'Candace', 'Haggai', 'Persis White', 'Zechariah', 'Tryphena',
-  'Asher', 'Euodia Brown', 'Levi', 'Syntyche', 'Reuben', 'Lois Harris', 'Simeon', 'Eunice Clark',
-  'Judah', 'Damaris', 'Naphtali', 'Drusilla Walker', 'Gad', 'Bernice Robinson', 'Dan', 'Lydia Hall',
-  'Zebulun', 'Tabitha Allen', 'Issachar', 'Rhoda Young', 'Manasseh', 'Apphia', 'Ephraim', 'Nympha',
-  'Boaz', 'Chloe Hernandez', 'Obed', 'Junia King', 'Jesse', 'Phoebe Wright', 'Saul', 'Julia Martin',
-  'Korah', 'Olympas', 'Lamech', 'Persis Moore', 'Melchizedek', 'Tryphosa', 'Methuselah', 'Quartus'
-];
-
-const stylePrompts = {
-  praise: `Generate enthusiastic praise and worship comments for a Christian livestream. Include emojis like 🙌, 🔥, 🙏. Examples:
-- "Hallelujah! Glory to God! 🙌"
-- "Jesus is Lord! "
-- "Glory to the Most High God! "`,
-  
-  testimonial: `Generate faith-based testimonial comments for a Christian livestream. Include emojis like 🙏, ✨, 💫. Examples:
-- "I receive my healing tonight! "
-- "My breakthrough is here in Jesus name! "
-- "Thank you Lord for answered prayers! "`,
-  
-  prayer: `Generate prayer request comments for a Christian livestream:
-- "Lord bless my family "
-- "Prayer request: God help me overcome "
-- "Father heal my mother "`,
-  
-  interactive: `Generate interactive location-based comments for a Christian livestream. Include country flags and emojis. Examples:
-- "Amen! Watching from Lagos! 🇳🇬"
-- "Watching from Nairobi 🇰🇪, Glory to God!"
-- "Abuja in the house! Hallelujah! "`,
-  
-  custom: `Generate authentic comments for a Christian livestream based on the custom theme provided. Use proper english, only use pidgin english when stated, no emoji's except i explicitly stated in the custom prompt. don't mention Dr Daysman or David Hernandez unless stated in the custom prompt.`
-};
 
 export async function POST(req: NextRequest) {
   try {
-    const { styles, batchSize, customPrompt, streamId } = await req.json();
-
-    if (!styles || !Array.isArray(styles) || styles.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one style must be selected' },
-        { status: 400 }
-      );
-    }
+    const { batchSize, customPrompt, streamId } = await req.json();
 
     if (!batchSize || batchSize < 5 || batchSize > 20) {
       return NextResponse.json(
@@ -101,40 +25,43 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // Build the AI prompt
-    let styleInstructions = '';
-    
-    // If only 'custom' style is selected, rely entirely on custom prompt
-    if (styles.includes('custom') && styles.length === 1 && customPrompt) {
-      styleInstructions = `Generate comments based on this theme: ${customPrompt}`;
-    } else {
-      // Use standard styles or mix with custom
-      styleInstructions = `Mix the following styles:\n${styles
-        .filter(s => s !== 'custom')
-        .map(style => stylePrompts[style as keyof typeof stylePrompts])
-        .join('\n\n')}`;
-      
-      if (customPrompt) {
-        styleInstructions += `\n\nAlso incorporate this custom theme: ${customPrompt}`;
-      }
-    }
+    // Persistent program background set by the admin (saved on the global config).
+    const cfg = await ViewerConfig.findOne({ streamId: 'global' });
+    const programContext = cfg?.programContext?.trim();
+    const programBackground = programContext
+      ? `\n\nBackground about this program (use it to keep comments relevant): ${programContext}`
+      : '';
 
-    let systemPrompt = `You are generating authentic comments for a Christian gospel livestream called "A Special Service" hosted by Dr Daysman Oyakhilome. always generate comments in first person.
+    // Optional theme to steer the comments; otherwise generate generic
+    // authentic comments for the service.
+    const themeInstruction = customPrompt
+      ? `Base the comments on this theme: ${customPrompt}`
+      : `Generate a natural mix of authentic comments for the service — praise, short testimonies, prayers, and viewers greeting from their location.`;
 
-Generate ${batchSize} unique, diverse comments. ${styleInstructions}
+    let systemPrompt = `You are generating authentic comments for a Christian gospel livestream called "A Special Service" hosted by Dr Daysman Oyakhilome. Always write comments in first person.${programBackground}
 
-IMPORTANT RULES:
-1. Each comment must be SHORT (5-15 words maximum)
-4. Make them feel authentic and spontaneous
-5. Vary the enthusiasm level
+Generate ${batchSize} unique comments. ${themeInstruction}
 
+For EACH comment, also invent a realistic viewer username that fits that comment's culture and tone:
+- A location/greeting comment from Lagos or Abuja should get a Nigerian name; an international greeting should get an international name.
+- Mix the formats so they never look templated: some first-name-only, some full names, a few lowercase handles, and occasionally a name with a number (e.g. "grace_o", "Emeka", "Ruth Kamau", "blessed247").
 
-Return ONLY a JSON array of comments. Each comment should be a simple string.
-Example format: ["comment 1", "comment 2", "comment 3"]`;
+MAKE THE BATCH FEEL HUMAN AND DIVERSE:
+1. Each comment must be SHORT (about 3-15 words).
+2. Vary the length a lot — some very short (3-4 words), some longer.
+3. Vary tone, capitalization, and punctuation between comments.
+4. NEVER use emojis, emoticons, or country-flag symbols. Text only.
+5. Vary the enthusiasm level; make them feel spontaneous, not copied.
+6. Do NOT repeat near-identical phrasings within the batch.
 
-    console.log('🤖 Calling OpenRouter AI...');
-    
-    // Call OpenRouter API with GPT-3.5-turbo (cheap and reliable)
+Return ONLY valid JSON in EXACTLY this shape (no markdown, no extra text):
+{ "comments": [ { "username": "Emeka", "text": "Watching from Lagos, glory to God" }, { "username": "grace_o", "text": "Amen, this word is timely" } ] }`;
+
+    console.log('🤖 Calling OpenRouter AI (GPT-5)...');
+
+    // Call OpenRouter API with GPT-5. Note: GPT-5 is a reasoning model —
+    // it only accepts the default temperature, needs a larger token budget
+    // (reasoning tokens are spent before output), and supports JSON mode.
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -144,7 +71,7 @@ Example format: ["comment 1", "comment 2", "comment 3"]`;
         'X-Title': 'TFN Web Stream Comments',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-3.5-turbo', // ~$0.001 per generation, very reliable
+        model: 'openai/gpt-5',
         messages: [
           {
             role: 'system',
@@ -155,8 +82,9 @@ Example format: ["comment 1", "comment 2", "comment 3"]`;
             content: `Generate ${batchSize} comments now.`
           }
         ],
-        temperature: 0.9, // More creative
-        max_tokens: 1000,
+        max_tokens: 4000, // room for reasoning tokens + JSON output
+        reasoning: { effort: 'low' }, // short chat lines don't need heavy reasoning
+        response_format: { type: 'json_object' },
       })
     });
 
@@ -172,45 +100,49 @@ Example format: ["comment 1", "comment 2", "comment 3"]`;
     const aiResponse = await response.json();
     console.log('✅ AI Response received');
 
-    let generatedTexts: string[] = [];
-    
+    // The model returns a JSON object: { comments: [ { username, text }, ... ] }
+    let generatedItems: { username?: string; text?: string }[] = [];
+
     try {
       const content = aiResponse.choices[0].message.content;
-      // Try to parse as JSON array
       const parsed = JSON.parse(content);
-      if (Array.isArray(parsed)) {
-        generatedTexts = parsed;
+      if (parsed && Array.isArray(parsed.comments)) {
+        generatedItems = parsed.comments;
+      } else if (Array.isArray(parsed)) {
+        // Tolerate a bare array of objects just in case
+        generatedItems = parsed;
       } else {
-        throw new Error('Not an array');
+        throw new Error('Unexpected JSON shape');
       }
     } catch (parseError) {
-      // If parsing fails, split by newlines and clean up
-      const content = aiResponse.choices[0].message.content;
-      generatedTexts = content
-        .split('\n')
-        .map((line: string) => line.trim())
-        .filter((line: string) => line.length > 0 && !line.startsWith('[') && !line.startsWith(']'))
-        .map((line: string) => line.replace(/^["']|["']$/g, '').replace(/^-\s*/, '').replace(/^\d+\.\s*/, ''))
-        .slice(0, batchSize);
+      console.error('❌ Failed to parse AI response as JSON:', parseError);
+      return NextResponse.json(
+        { error: 'AI returned an unparseable response' },
+        { status: 500 }
+      );
     }
 
-    // Generate comments with random usernames
-    const comments = generatedTexts.map((text, index) => {
-      const randomName = nigerianNames[Math.floor(Math.random() * nigerianNames.length)];
-      const addNumber = Math.random() < 0.3;
-      const username = addNumber ? `${randomName}${Math.floor(Math.random() * 1000)}` : randomName;
-      
-      // Determine style for this comment (distribute evenly)
-      const styleIndex = Math.floor((index / batchSize) * styles.length);
-      const style = styles[styleIndex] || styles[0];
+    // Build comments in the queue shape: { _id, username, text }.
+    // Trust the AI for usernames; drop any item missing a username or text.
+    const comments = generatedItems
+      .map((item) => {
+        const username = String(item?.username ?? '').trim().slice(0, 60);
+        const text = String(item?.text ?? '').trim().slice(0, 500);
 
-      return {
-        _id: new mongoose.Types.ObjectId(),
-        username,
-        text: text.substring(0, 500), // Limit length
-        style,
-      };
-    });
+        return {
+          _id: new mongoose.Types.ObjectId(),
+          username,
+          text,
+        };
+      })
+      .filter((c) => c.username.length > 0 && c.text.length > 0);
+
+    if (comments.length === 0) {
+      return NextResponse.json(
+        { error: 'AI returned no usable comments' },
+        { status: 500 }
+      );
+    }
 
     // Save to queue
     const queue = await CommentQueue.create({
@@ -219,7 +151,6 @@ Example format: ["comment 1", "comment 2", "comment 3"]`;
       status: 'pending',
       customPrompt,
       batchSize,
-      styles,
     });
 
     console.log(`✅ Generated ${comments.length} comments, saved to queue`);

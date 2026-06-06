@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { streamId = 'global', minViewers, maxViewers, variationSpeed, isActive, commentsActive } = body;
+    const { streamId = 'global', minViewers, maxViewers, variationSpeed, isActive, commentsActive, programContext } = body;
 
     // Validation
     if (minViewers !== undefined && minViewers < 0) {
@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
         ...(variationSpeed !== undefined && { variationSpeed }),
         ...(isActive !== undefined && { isActive }),
         ...(commentsActive !== undefined && { commentsActive }),
+        ...(programContext !== undefined && { programContext }),
       },
       { new: true, upsert: true }
     );

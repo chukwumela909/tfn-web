@@ -7,7 +7,6 @@ interface QueueComment {
   _id: string;
   username: string;
   text: string;
-  style: string;
 }
 
 interface CommentQueue {
@@ -18,16 +17,9 @@ interface CommentQueue {
   generatedAt: string;
   customPrompt?: string;
   batchSize: number;
-  styles: string[];
 }
 
 export default function AICommentsPage() {
-  const [styles, setStyles] = useState({
-    praise: true,
-    testimonial: true,
-    prayer: true,
-    interactive: true,
-  });
   const [batchSize, setBatchSize] = useState(10);
   const [customPrompt, setCustomPrompt] = useState('');
   const [streamId, setStreamId] = useState('global');
@@ -37,6 +29,9 @@ export default function AICommentsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [latestStream, setLatestStream] = useState<any>(null);
+  const [programContext, setProgramContext] = useState('');
+  const [savingContext, setSavingContext] = useState(false);
+  const [contextSaved, setContextSaved] = useState(false);
 
   // Fetch latest stream
   useEffect(() => {
@@ -58,24 +53,57 @@ export default function AICommentsPage() {
     fetchLatestStream();
   }, []);
 
-  const selectedStyles = Object.entries(styles)
-    .filter(([_, enabled]) => enabled)
-    .map(([style]) => style);
+  // Load the saved program context (persisted on the global config)
+  useEffect(() => {
+    const fetchProgramContext = async () => {
+      try {
+        const response = await fetch('/api/admin/viewer-config?streamId=global');
+        if (response.ok) {
+          const data = await response.json();
+          setProgramContext(data.config?.programContext ?? '');
+        }
+      } catch (error) {
+        console.error('Error fetching program context:', error);
+      }
+    };
+    fetchProgramContext();
+  }, []);
+
+  const handleSaveContext = async () => {
+    setSavingContext(true);
+    setContextSaved(false);
+    try {
+      const response = await fetch('/api/admin/viewer-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          streamId: 'global',
+          programContext,
+        }),
+      });
+
+      if (response.ok) {
+        setContextSaved(true);
+        setTimeout(() => setContextSaved(false), 3000);
+      } else {
+        const error = await response.json();
+        alert(`Failed to save context: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error saving context:', error);
+      alert('Failed to save program context');
+    } finally {
+      setSavingContext(false);
+    }
+  };
 
   const handleGenerate = async () => {
-    // Allow generation with either styles OR custom prompt (or both)
-    if (selectedStyles.length === 0 && !customPrompt.trim()) {
-      alert('Please select at least one comment style OR enter a custom prompt');
-      return;
-    }
-
     setGenerating(true);
     try {
       const response = await fetch('/api/admin/comments/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          styles: selectedStyles.length > 0 ? selectedStyles : ['custom'],
           batchSize,
           customPrompt: customPrompt.trim() || undefined,
           streamId,
@@ -95,7 +123,6 @@ export default function AICommentsPage() {
           generatedAt: data.generatedAt,
           customPrompt: customPrompt.trim() || undefined,
           batchSize: batchSize,
-          styles: selectedStyles.length > 0 ? selectedStyles : ['custom'],
         };
         
         console.log('Setting current queue:', newQueue);
@@ -232,30 +259,30 @@ export default function AICommentsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Panel - Generator */}
           <div className="space-y-6">
-            {/* Comment Styles */}
+            {/* Program Context (persistent) */}
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <h2 className="text-xl font-bold mb-2">Comment Styles (Optional)</h2>
-              <p className="text-sm text-slate-400 mb-4">
-                Select styles to mix, or leave unchecked to use custom theme only
+              <h2 className="text-xl font-bold mb-2">Program Context</h2>
+              <p className="text-sm text-slate-400 mb-3">
+                Saved background about the program (theme, guest minister, scripture,
+                audience). Applied automatically to every generation.
               </p>
-              <div className="space-y-3">
-                {Object.entries(styles).map(([style, enabled]) => (
-                  <label key={style} className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={enabled}
-                      onChange={(e) => setStyles({ ...styles, [style]: e.target.checked })}
-                      className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-blue-600"
-                    />
-                    <span className="flex-1 capitalize">{style}</span>
-                    <span className="text-sm text-slate-400">
-                      {style === 'praise' && '🙌 Hallelujah! Glory!'}
-                      {style === 'testimonial' && '🙏 I receive healing!'}
-                      {style === 'prayer' && '😭 Lord bless my family'}
-                      {style === 'interactive' && '🇳🇬 Watching from Lagos!'}
-                    </span>
-                  </label>
-                ))}
+              <textarea
+                value={programContext}
+                onChange={(e) => setProgramContext(e.target.value)}
+                placeholder="E.g., Tonight's theme is Healing & Restoration. Guest minister: Pastor John. Audience is mostly West African. Scripture: Isaiah 53."
+                className="w-full h-28 bg-slate-700 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-400"
+              />
+              <div className="flex items-center gap-3 mt-3">
+                <button
+                  onClick={handleSaveContext}
+                  disabled={savingContext}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
+                >
+                  {savingContext ? 'Saving...' : '💾 Save Context'}
+                </button>
+                {contextSaved && (
+                  <span className="text-sm text-green-400">✓ Saved</span>
+                )}
               </div>
             </div>
 
@@ -279,9 +306,9 @@ export default function AICommentsPage() {
 
             {/* Custom Prompt */}
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <h2 className="text-xl font-bold mb-2">Custom Theme</h2>
+              <h2 className="text-xl font-bold mb-2">Custom Theme (Optional)</h2>
               <p className="text-sm text-slate-400 mb-3">
-                Can be used alone or combined with styles above
+                One-off steer for this batch only (not saved). Leave blank for a natural mix.
               </p>
               <textarea
                 value={customPrompt}
@@ -290,14 +317,14 @@ export default function AICommentsPage() {
                 className="w-full h-24 bg-slate-700 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-400"
               />
               <p className="text-sm text-slate-400 mt-2">
-                💡 Tip: You can generate using custom theme only, no styles needed!
+                💡 Tip: Leave this blank to generate a natural mix of comments.
               </p>
             </div>
 
             {/* Generate Button */}
             <button
               onClick={handleGenerate}
-              disabled={generating || (selectedStyles.length === 0 && !customPrompt.trim())}
+              disabled={generating}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 text-lg"
             >
               {generating ? (
@@ -397,9 +424,6 @@ export default function AICommentsPage() {
                             </div>
                           </div>
                           <p className="text-sm text-white/90">{comment.text}</p>
-                          <span className="text-xs text-slate-500 capitalize mt-1 inline-block">
-                            {comment.style}
-                          </span>
                         </>
                       )}
                     </div>
